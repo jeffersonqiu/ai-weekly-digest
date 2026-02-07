@@ -307,12 +307,12 @@ weekly-ai-digest/
 
 
 
-[ ] Phase 9: Notifications
-    [ ] 9.1 Create src/services/notify/email.py
-    [ ] 9.2 Create src/services/notify/telegram.py
-    [ ] 9.3 Create src/scripts/send_notification.py
-    [ ] 9.4 Verify: Receive test digest
-    [ ] 9.5 Git: commit "feat: add email and telegram notifications"
+[x] Phase 9: Notifications
+    [x] 9.1 Create src/services/notify/email.py
+    [x] 9.2 Create src/services/notify/telegram.py
+    [x] 9.3 Create src/scripts/send_notification.py
+    [x] 9.4 Verify: Receive test digest
+    [x] 9.5 Git: commit "feat: add email and telegram notifications"
 
 [ ] Phase 10: Docker & Airflow
     [ ] 10.1 Create Dockerfile
