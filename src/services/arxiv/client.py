@@ -82,15 +82,15 @@ class ArxivClient:
         """
         # Build category part: (cat:cs.AI OR cat:cs.LG)
         cat_queries = [f"cat:{cat}" for cat in categories]
-        cat_part = f"({'+OR+'.join(cat_queries)})"
+        cat_part = f"({' OR '.join(cat_queries)})"
 
         # Build date part - format: YYYYMMDDTTTT where TTTT is HHMM in GMT
         # Use 0600 as start (6am GMT) to catch papers from that day
         start_str = start_date.strftime("%Y%m%d") + "0000"
         end_str = end_date.strftime("%Y%m%d") + "2359"
-        date_part = f"submittedDate:[{start_str}+TO+{end_str}]"
+        date_part = f"submittedDate:[{start_str} TO {end_str}]"
 
-        return f"{cat_part}+AND+{date_part}"
+        return f"{cat_part} AND {date_part}"
 
     def _fetch_with_pagination(
         self, query: str, max_results: int, batch_size: int = 100
@@ -146,12 +146,16 @@ class ArxivClient:
             "sortOrder": "descending",
         }
 
+        headers = {
+            "User-Agent": "Weekly-AI-Digest/1.0 (mailto:jeffersonqiu@gmail.com)"
+        }
+
         for attempt in range(max_retries):
             # Respect rate limit
             self._wait_for_rate_limit()
 
             try:
-                with httpx.Client(timeout=30.0) as client:
+                with httpx.Client(timeout=60.0, headers=headers) as client:
                     response = client.get(self.BASE_URL, params=params)
                     response.raise_for_status()
                     return parse_arxiv_response(response.text)
@@ -165,6 +169,10 @@ class ArxivClient:
                     continue
                 print(f"Error fetching from arXiv: {e}")
                 return ArxivSearchResult(papers=[], total_results=0, start_index=start)
+
+            except httpx.TimeoutException:
+                print(f"Request timed out. Retrying (attempt {attempt + 1}/{max_retries})...")
+                continue
 
             except httpx.HTTPError as e:
                 print(f"Error fetching from arXiv: {e}")
