@@ -42,7 +42,7 @@ Provide a JSON object with the following fields:
 - "contribution": One sentence on what is new.
 - "significance": One sentence on why it matters.
 - "limitations": One sentence on constraints or caveats (if any).
-- "category": Best fit category (e.g., "LLMs", "Computer Vision", "Reinforcement Learning", "Theory", "Robotics").
+- "category": Best fit category from: "Model Design", "Training & Optimization", "Evaluation & Metrics", "Agents & Systems", "Safety & Applications", "Miscellaneous".
 - "takeaway": A punchy 3-5 word takeaway (e.g., "Faster RAG with less memory").
 
 Output valid JSON only.
@@ -65,6 +65,7 @@ Follow this structure:
 Select the most impactful papers.
 Format:
 ### [Title]({link})
+**Category**: {{category_icon}} {{category_name}}
 **Takeaway**: ...
 - **Contribution**: ...
 - **Why it matters**: ...

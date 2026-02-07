@@ -297,6 +297,15 @@ weekly-ai-digest/
     [x] 8.3 Verify: Markdown digest generated
     [x] 8.4 Git: commit "feat: add digest generation"
 
+[x] Phase 8.5: Digest Enhancements
+    [x] 8.5.1 Update prompts with specific categories
+    [x] 8.5.2 Add matplotlib dependency
+    [x] 8.5.3 Update generate_digest.py with stats and chart
+    [x] 8.5.4 Verify: Enhanced digest with chart
+
+
+
+
 
 [ ] Phase 9: Notifications
     [ ] 9.1 Create src/services/notify/email.py
