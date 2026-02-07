@@ -69,13 +69,62 @@ We commit after each phase is **complete and verified**. Each commit should:
 | 10 | `feat: add docker and airflow setup` |
 | 11 | `feat: add fastapi endpoints` |
 
-### Push After Each Phase
-```bash
-# After completing and verifying a phase:
-git add .
-git commit -m "feat: <phase description>"
-git push origin main
+### Feature Branch Workflow
+
+We use feature branches + GitHub Pull Requests for all changes:
+
 ```
+┌─────────────────────────────────────────────────────────────┐
+│  FEATURE BRANCH WORKFLOW                                     │
+├─────────────────────────────────────────────────────────────┤
+│  1. Create branch    git checkout -b feat/feature-name      │
+│  2. Make changes     (edit code)                            │
+│  3. Stage & commit   git add . && git commit -m "..."       │
+│  4. Push branch      git push -u origin feat/feature-name   │
+│  5. Create PR        (on GitHub)                            │
+│  6. Merge PR         (on GitHub)                            │
+│  7. Sync local       git checkout main && git pull          │
+│  8. Next feature     git checkout -b feat/next-feature      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Step-by-Step Commands
+
+```bash
+# 1. Create a new feature branch from main
+git checkout main
+git pull
+git checkout -b feat/phase-name
+
+# 2. Make your code changes...
+
+# 3. Stage and commit
+git add .
+git commit -m "feat: description of changes"
+
+# 4. Push branch to GitHub
+git push -u origin feat/phase-name
+
+# 5. Go to GitHub and create a Pull Request
+#    URL will be shown in terminal, or visit:
+#    https://github.com/jeffersonqiu/ai-weekly-digest/pulls
+
+# 6. Review the diff on GitHub, then click "Merge"
+
+# 7. Sync your local main branch
+git checkout main
+git pull
+
+# 8. Ready for next feature!
+git checkout -b feat/next-phase
+```
+
+#### Why This Workflow?
+
+- **Visual diff review** — See all changes before merging
+- **Clean history** — Each feature is one merge commit
+- **Collaboration ready** — Standard team workflow
+- **Rollback friendly** — Easy to revert a whole feature
 
 ## Architecture Overview
 
@@ -188,45 +237,45 @@ weekly-ai-digest/
 ## Build Order & Current Progress
 
 ```
-[/] Phase 1: Project Setup
-    [ ] 1.1 Create pyproject.toml
-    [ ] 1.2 Create .env.example
-    [ ] 1.3 Create .gitignore
-    [ ] 1.4 Create src/__init__.py
-    [ ] 1.5 Verify: uv sync
-    [ ] 1.6 Git: Initialize repo and first commit
+[x] Phase 1: Project Setup
+    [x] 1.1 Create pyproject.toml
+    [x] 1.2 Create .env.example
+    [x] 1.3 Create .gitignore
+    [x] 1.4 Create src/__init__.py
+    [x] 1.5 Verify: uv sync
+    [x] 1.6 Git: Initialize repo and first commit
 
-[ ] Phase 2: Configuration
-    [ ] 2.1 Create src/config.py
-    [ ] 2.2 Verify: Load settings from .env
-    [ ] 2.3 Git: commit "feat: add configuration loader"
+[x] Phase 2: Configuration
+    [x] 2.1 Create src/config.py
+    [x] 2.2 Verify: Load settings from .env
+    [x] 2.3 Git: commit "feat: add configuration loader"
 
-[ ] Phase 3: Database Models
-    [ ] 3.1 Create src/database.py
-    [ ] 3.2 Create src/models/base.py
-    [ ] 3.3 Create src/models/run.py
-    [ ] 3.4 Create src/models/paper.py
-    [ ] 3.5 Create src/models/score.py
-    [ ] 3.6 Create src/models/digest.py
-    [ ] 3.7 Create src/models/__init__.py
-    [ ] 3.8 Verify: Models import correctly
-    [ ] 3.9 Git: commit "feat: add database models"
+[x] Phase 3: Database Models
+    [x] 3.1 Create src/database.py
+    [x] 3.2 Create src/models/base.py
+    [x] 3.3 Create src/models/run.py
+    [x] 3.4 Create src/models/paper.py
+    [x] 3.5 Create src/models/score.py
+    [x] 3.6 Create src/models/digest.py
+    [x] 3.7 Create src/models/__init__.py
+    [x] 3.8 Verify: Models import correctly
+    [x] 3.9 Git: commit "feat: add database models"
 
-[ ] Phase 4: Migrations
-    [ ] 4.1 Initialize Alembic
-    [ ] 4.2 Generate initial migration
-    [ ] 4.3 Start Postgres container
-    [ ] 4.4 Apply migration
-    [ ] 4.5 Verify: Tables exist
-    [ ] 4.6 Git: commit "feat: add alembic migrations"
+[x] Phase 4: Migrations
+    [x] 4.1 Initialize Alembic
+    [x] 4.2 Generate initial migration
+    [x] 4.3 Start Postgres container
+    [x] 4.4 Apply migration
+    [x] 4.5 Verify: Tables exist
+    [x] 4.6 Git: commit "feat: add alembic migrations"
 
-[ ] Phase 5: arXiv Client
-    [ ] 5.1 Create src/services/arxiv/client.py
-    [ ] 5.2 Create src/services/arxiv/parser.py
-    [ ] 5.3 Create src/schemas/paper.py
-    [ ] 5.4 Write test_arxiv_client.py
-    [ ] 5.5 Verify: Fetch real papers
-    [ ] 5.6 Git: commit "feat: add arxiv client"
+[x] Phase 5: arXiv Client
+    [x] 5.1 Create src/services/arxiv/client.py
+    [x] 5.2 Create src/services/arxiv/parser.py
+    [x] 5.3 Create src/schemas/paper.py
+    [x] 5.4 Write test_arxiv_client.py
+    [x] 5.5 Verify: Fetch real papers
+    [x] 5.6 Git: commit "feat: add arxiv client"
 
 [ ] Phase 6: Paper Storage
     [ ] 6.1 Create src/repositories/paper_repo.py
