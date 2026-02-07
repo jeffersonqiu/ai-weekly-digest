@@ -27,7 +27,7 @@ class PaperScore(Base):
     run_id: Mapped[int] = mapped_column(Integer, ForeignKey("runs.id"), index=True)
 
     # Individual scoring signals (all 0-1 normalized)
-    recency_score: Mapped[float] = mapped_column(Float, default=0.0)
+    author_score: Mapped[float] = mapped_column(Float, default=0.0)
     category_score: Mapped[float] = mapped_column(Float, default=0.0)
     llm_interest_score: Mapped[float] = mapped_column(Float, default=0.0)
     llm_reasoning: Mapped[str | None] = mapped_column(

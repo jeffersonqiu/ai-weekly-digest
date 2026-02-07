@@ -43,6 +43,12 @@ class Settings(BaseSettings):
     arxiv_categories: str = "cs.AI,cs.LG,cs.CL,cs.CV"
     arxiv_max_papers: int = 200
     arxiv_days_lookback: int = 7
+    priority_authors: str = "Turing,Hinton,LeCun,Bengio,Sutskever"
+
+    @property
+    def priority_author_list(self) -> list[str]:
+        """Parse comma-separated authors into a list."""
+        return [auth.strip().lower() for auth in self.priority_authors.split(",")]
 
     @property
     def arxiv_category_list(self) -> list[str]:
