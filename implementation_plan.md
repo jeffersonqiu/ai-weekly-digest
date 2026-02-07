@@ -277,11 +277,11 @@ weekly-ai-digest/
     [x] 5.5 Verify: Fetch real papers
     [x] 5.6 Git: commit "feat: add arxiv client"
 
-[ ] Phase 6: Paper Storage
-    [ ] 6.1 Create src/repositories/paper_repo.py
-    [ ] 6.2 Create src/scripts/fetch_papers.py
-    [ ] 6.3 Verify: Papers saved to DB
-    [ ] 6.4 Git: commit "feat: add paper storage and fetch script"
+[x] Phase 6: Paper Storage
+    [x] 6.1 Create src/repositories/paper_repo.py
+    [x] 6.2 Create src/scripts/fetch_papers.py
+    [x] 6.3 Verify: Papers saved to DB
+    [x] 6.4 Git: commit "feat: add paper storage and fetch script"
 
 [ ] Phase 7: Scoring & Ranking
     [ ] 7.1 Create src/services/ranking/scorer.py
