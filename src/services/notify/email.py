@@ -33,11 +33,11 @@ class EmailSender:
         self.port = settings.smtp_port
         self.user = settings.smtp_user
         self.password = settings.smtp_pass
-        self.recipient = settings.email_to
+        self.recipients = settings.email_to_list  # List of recipients
 
     def is_configured(self) -> bool:
         """Check if email sending is properly configured."""
-        return all([self.host, self.user, self.password, self.recipient])
+        return all([self.host, self.user, self.password, self.recipients])
 
     async def send_digest(
         self,
@@ -45,7 +45,7 @@ class EmailSender:
         markdown_content: str,
         chart_path: Optional[str] = None,
     ) -> bool:
-        """Send the digest email.
+        """Send the digest email to all configured recipients.
 
         Args:
             subject: Email subject line
@@ -66,7 +66,7 @@ class EmailSender:
             msg = MIMEMultipart("related")
             msg["Subject"] = subject
             msg["From"] = self.user
-            msg["To"] = self.recipient
+            msg["To"] = ", ".join(self.recipients)  # Comma-separated for header
 
             # Convert markdown to HTML with proper styling
             html_body = self._markdown_to_html(markdown_content, chart_path)
@@ -85,8 +85,9 @@ class EmailSender:
                     )
                     msg.attach(img)
 
-            # Send email
-            logger.info(f"Sending email to {self.recipient}...")
+            # Send email to all recipients
+            recipient_count = len(self.recipients)
+            logger.info(f"Sending email to {recipient_count} recipient(s): {', '.join(self.recipients)}")
             await aiosmtplib.send(
                 msg,
                 hostname=self.host,
@@ -94,6 +95,7 @@ class EmailSender:
                 username=self.user,
                 password=self.password,
                 start_tls=True,
+                recipients=self.recipients,  # Pass list of recipients
             )
             logger.info("Email sent successfully!")
             return True
@@ -129,7 +131,7 @@ class EmailSender:
             extensions=["tables", "fenced_code", "nl2br"],
         )
 
-        # Wrap in styled HTML template
+        # Wrap in styled HTML template - professional newsletter style
         html = f"""
 <!DOCTYPE html>
 <html>
@@ -137,78 +139,161 @@ class EmailSender:
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        /* Reset and base styles */
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
+            font-size: 15px;
+            line-height: 1.7;
+            color: #374151;
+            background-color: #f3f4f6;
             padding: 20px;
-            background-color: #f9f9f9;
         }}
+        /* Container */
+        .container {{
+            max-width: 680px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }}
+        .content {{
+            padding: 32px;
+        }}
+        /* Header */
         h1 {{
-            color: #1a365d;
-            border-bottom: 3px solid #4a90d9;
-            padding-bottom: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #3b82f6;
         }}
+        /* Section headers */
         h2 {{
-            color: #2c5282;
-            margin-top: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
         }}
+        /* Paper titles */
         h3 {{
-            color: #3182ce;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-top: 20px;
+            margin-bottom: 8px;
         }}
+        h3 a {{
+            color: #2563eb;
+            text-decoration: none;
+        }}
+        h3 a:hover {{
+            text-decoration: underline;
+        }}
+        /* Subsection headers (like "Model Design", "Training & Optimization") */
+        h4 {{
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }}
+        /* Meta info box (date range) */
         blockquote {{
-            border-left: 4px solid #4a90d9;
-            padding-left: 15px;
-            margin-left: 0;
-            color: #555;
-            background-color: #edf2f7;
-            padding: 10px 15px;
-            border-radius: 0 8px 8px 0;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 16px 0;
+            font-size: 14px;
+            color: #64748b;
         }}
+        blockquote strong {{
+            color: #475569;
+        }}
+        /* Paragraphs */
+        p {{
+            margin-bottom: 12px;
+            font-size: 15px;
+        }}
+        /* Strong/bold text */
+        strong {{
+            font-weight: 600;
+            color: #374151;
+        }}
+        /* Lists */
         ul {{
+            margin: 12px 0;
             padding-left: 20px;
         }}
         li {{
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            font-size: 15px;
         }}
-        strong {{
-            color: #2d3748;
+        li strong {{
+            color: #1f2937;
         }}
+        /* Links */
         a {{
-            color: #3182ce;
+            color: #2563eb;
             text-decoration: none;
         }}
         a:hover {{
             text-decoration: underline;
         }}
-        .paper {{
-            background: white;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
+        /* Images (chart) */
         img {{
             max-width: 100%;
             height: auto;
             border-radius: 8px;
-            margin: 20px 0;
+            margin: 16px 0;
+            border: 1px solid #e5e7eb;
         }}
+        /* Horizontal rule */
         hr {{
             border: none;
-            border-top: 1px solid #e2e8f0;
-            margin: 30px 0;
+            border-top: 1px solid #e5e7eb;
+            margin: 32px 0;
+        }}
+        /* Paper cards for top breakthroughs */
+        .paper-card {{
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }}
+        /* Footer */
+        .footer {{
+            background-color: #f9fafb;
+            padding: 20px 32px;
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
         }}
     </style>
 </head>
 <body>
-    {html_body}
-    <hr>
-    <p style="color: #718096; font-size: 12px;">
-        This digest was generated automatically by the Weekly AI Papers Digest system.
-    </p>
+    <div class="container">
+        <div class="content">
+            {html_body}
+        </div>
+        <div class="footer">
+            This digest was generated automatically by the Weekly AI Papers Digest system.
+        </div>
+    </div>
 </body>
 </html>
 """
