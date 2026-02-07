@@ -60,7 +60,14 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str | None = None
     smtp_pass: str | None = None
-    email_to: str | None = None
+    email_to: str | None = None  # Comma-separated list of recipients
+
+    @property
+    def email_to_list(self) -> list[str]:
+        """Parse comma-separated email addresses into a list."""
+        if not self.email_to:
+            return []
+        return [email.strip() for email in self.email_to.split(",") if email.strip()]
 
     # Telegram
     telegram_bot_token: str | None = None
