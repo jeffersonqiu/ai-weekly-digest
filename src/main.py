@@ -9,6 +9,7 @@ import logging
 import sys
 from src.scripts.fetch_papers import main as fetch_main
 from src.scripts.rank_papers import rank_papers as rank_main
+from src.scripts.generate_digest import generate_digest as digest_main
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -26,6 +27,10 @@ def run_pipeline():
         # Step 2: Rank Papers
         logger.info("--- Step 2: Ranking Papers ---")
         rank_main()
+        
+        # Step 3: Generate Digest
+        logger.info("--- Step 3: Generating Digest ---")
+        digest_main()
         
         logger.info("=== Pipeline Completed Successfully ===")
         

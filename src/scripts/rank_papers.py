@@ -110,6 +110,19 @@ def rank_papers(limit: int = 20):
             
             logger.info(f"  Score: {final_score:.2f} (Auth: {author_score:.2f}, Cat: {category_score:.2f}, LLM: {llm_score:.2f})")
 
+        # 5. Update Ranks
+        logger.info("Updating ranks...")
+        # Get all scores for the run(s) - effectively all scores since we cleared table
+        stmt = select(PaperScore).order_by(PaperScore.final_score.desc())
+        all_scores = db.scalars(stmt).all()
+        
+        for i, score in enumerate(all_scores, 1):
+            score.rank = i
+        
+        db.commit()
+        logger.info(f"Updated ranks for {len(all_scores)} papers.")
+
+
     except Exception as e:
         logger.error(f"Error during ranking: {e}", exc_info=True)
     finally:

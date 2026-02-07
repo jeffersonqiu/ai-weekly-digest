@@ -283,19 +283,20 @@ weekly-ai-digest/
     [x] 6.3 Verify: Papers saved to DB
     [x] 6.4 Git: commit "feat: add paper storage and fetch script"
 
-[ ] Phase 7: Scoring & Ranking
-    [ ] 7.1 Create src/services/ranking/scorer.py
-    [ ] 7.2 Create src/services/llm/client.py
-    [ ] 7.3 Create src/services/llm/prompts.py
-    [ ] 7.4 Create src/scripts/rank_papers.py
-    [ ] 7.5 Verify: Top 20 papers ranked
-    [ ] 7.6 Git: commit "feat: add scoring and ranking system"
+[x] Phase 7: Scoring & Ranking
+    [x] 7.1 Create src/services/ranking/scorer.py
+    [x] 7.2 Create src/services/llm/client.py
+    [x] 7.3 Create src/services/llm/prompts.py
+    [x] 7.4 Create src/scripts/rank_papers.py
+    [x] 7.5 Verify: Top 20 papers ranked
+    [x] 7.6 Git: commit "feat: add scoring and ranking system"
 
-[ ] Phase 8: Digest Generation
-    [ ] 8.1 Create src/services/llm/summarizer.py
-    [ ] 8.2 Create src/scripts/generate_digest.py
-    [ ] 8.3 Verify: Markdown digest generated
-    [ ] 8.4 Git: commit "feat: add digest generation"
+[x] Phase 8: Digest Generation
+    [x] 8.1 Create src/services/llm/summarizer.py
+    [x] 8.2 Create src/scripts/generate_digest.py
+    [x] 8.3 Verify: Markdown digest generated
+    [x] 8.4 Git: commit "feat: add digest generation"
+
 
 [ ] Phase 9: Notifications
     [ ] 9.1 Create src/services/notify/email.py
