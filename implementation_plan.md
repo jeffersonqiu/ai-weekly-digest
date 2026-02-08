@@ -787,11 +787,44 @@ The PostgreSQL service in GitHub Actions is temporary:
 ### Scoring Formula
 
 ```python
-score = (
-    0.25 * recency_score +       # Newer papers score higher (0-1)
-    0.25 * category_score +      # Priority categories (0-1)
+final_score = (
+    0.10 * author_score +        # Priority author bonus (0 or 1)
+    0.40 * category_score +      # Priority categories (0.1-1.0)
     0.50 * llm_interest_score    # LLM-assessed novelty (0-1)
 )
+```
+
+### Scoring Components
+
+| Signal | Weight | Range | Logic |
+|--------|--------|-------|-------|
+| **Author Score** | 10% | 0 or 1 | 1.0 if any author matches priority list |
+| **Category Score** | 40% | 0.1-1.0 | 1.0=primary match, 0.5=secondary, 0.1=other |
+| **LLM Interest** | 50% | 0-1 | GPT-4o-mini rates novelty/impact |
+
+### Author Scoring
+```python
+# Partial match (case-insensitive)
+# "Geoffrey Hinton" matches "hinton" in priority list
+priority_authors = ["hinton", "lecun", "bengio", "sutskever"]
+
+for author in paper.authors:
+    if any(p in author.lower() for p in priority_authors):
+        return 1.0
+return 0.0
+```
+
+### Category Scoring
+```python
+# Primary category = first in list
+paper_categories = ["cs.LG", "cs.AI", "stat.ML"]
+
+if paper_categories[0] in target_list:  # Primary match
+    return 1.0
+elif any(cat in target_list for cat in paper_categories[1:]):  # Secondary
+    return 0.5
+else:
+    return 0.1
 ```
 
 ### LLM Interest Prompt
@@ -804,11 +837,13 @@ Rate this paper's CLAIMED novelty/impact (1-10) based on its abstract.
 
 Title: {title}
 Abstract: {abstract}
+Categories: {categories}
 
-Rate 1-10 where:
-- 1-3: Incremental improvement
-- 4-6: Solid contribution
-- 7-10: Claims major breakthrough
+Scoring Guide:
+- 1-3: Incremental improvement, minor extension of existing work
+- 4-6: Solid contribution with clear novelty
+- 7-8: Significant advance, new approach or strong results
+- 9-10: Potential breakthrough, paradigm shift
 
 Output JSON only: {"score": <int>, "reasoning": "<1 sentence>"}
 """
