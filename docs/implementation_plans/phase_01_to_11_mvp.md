@@ -301,10 +301,6 @@ weekly-ai-digest/
     [x] 8.5.3 Update generate_digest.py with stats and chart
     [x] 8.5.4 Verify: Enhanced digest with chart
 
-
-
-
-
 [x] Phase 9: Notifications
     [x] 9.1 Create src/services/notify/email.py
     [x] 9.2 Create src/services/notify/telegram.py
