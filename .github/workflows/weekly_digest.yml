@@ -1,0 +1,131 @@
+# =============================================================================
+# Weekly AI Papers Digest - GitHub Actions Workflow
+# =============================================================================
+#
+# This workflow runs the weekly digest pipeline automatically.
+#
+# Schedule: Every Monday at 9:00 AM UTC
+# Also supports: Manual trigger via GitHub UI
+#
+# Required GitHub Secrets:
+#   - DATABASE_URL: PostgreSQL connection string
+#   - OPENAI_API_KEY: OpenAI API key for LLM scoring/summarization
+#   - SMTP_USER: Email sender address
+#   - SMTP_PASS: Email app password
+#   - EMAIL_TO: Recipient email(s), comma-separated
+#   - TELEGRAM_BOT_TOKEN: (optional) Telegram bot token
+#   - TELEGRAM_CHAT_ID: (optional) Telegram chat ID
+# =============================================================================
+
+name: Weekly AI Digest
+
+on:
+  # Run every Monday at 9:00 AM UTC
+  schedule:
+    - cron: "0 9 * * 1"
+  
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+    inputs:
+      days_lookback:
+        description: "Number of days to look back for papers"
+        required: false
+        default: "7"
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  generate-digest:
+    name: Generate Weekly Digest
+    runs-on: ubuntu-latest
+    
+    # PostgreSQL service container
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: digest
+          POSTGRES_PASSWORD: digest_secret
+          POSTGRES_DB: weekly_digest
+        ports:
+          - 5432:5432
+        # Health check to ensure Postgres is ready
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # =======================================================================
+      # Setup
+      # =======================================================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install UV
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # =======================================================================
+      # Database Setup
+      # =======================================================================
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql://digest:digest_secret@localhost:5432/weekly_digest
+        run: uv run alembic upgrade head
+
+      # =======================================================================
+      # Pipeline Steps
+      # =======================================================================
+      - name: Fetch papers from arXiv
+        env:
+          DATABASE_URL: postgresql://digest:digest_secret@localhost:5432/weekly_digest
+          ARXIV_DAYS_LOOKBACK: ${{ github.event.inputs.days_lookback || '7' }}
+        run: uv run python -m src.scripts.fetch_papers
+
+      - name: Score and rank papers
+        env:
+          DATABASE_URL: postgresql://digest:digest_secret@localhost:5432/weekly_digest
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_PROVIDER: openai
+        run: uv run python -m src.scripts.rank_papers
+
+      - name: Generate digest
+        env:
+          DATABASE_URL: postgresql://digest:digest_secret@localhost:5432/weekly_digest
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_PROVIDER: openai
+        run: uv run python -m src.scripts.generate_digest
+
+      - name: Send notifications
+        env:
+          DATABASE_URL: postgresql://digest:digest_secret@localhost:5432/weekly_digest
+          SMTP_HOST: smtp.gmail.com
+          SMTP_PORT: 587
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: uv run python -m src.scripts.send_notification
+
+      # =======================================================================
+      # Artifacts
+      # =======================================================================
+      - name: Upload digest artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ github.run_number }}
+          path: output/digests/
+          retention-days: 30

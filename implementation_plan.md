@@ -66,7 +66,7 @@ We commit after each phase is **complete and verified**. Each commit should:
 | 7 | `feat: add scoring and ranking system` |
 | 8 | `feat: add digest generation` |
 | 9 | `feat: add email and telegram notifications` |
-| 10 | `feat: add docker and airflow setup` |
+| 10 | `feat: add github actions workflow` |
 | 11 | `feat: add fastapi endpoints` |
 
 ### Feature Branch Workflow
@@ -133,15 +133,19 @@ git checkout -b feat/next-phase
 │                         User                                 │
 └─────────────────────────────────────────────────────────────┘
                               │
+          ┌───────────────────┴───────────────────┐
+          ▼                                       ▼
+┌─────────────────────────────────────┐ ┌─────────────────────┐
+│      FastAPI (API Layer)            │ │  GitHub Actions     │
+│  GET /health                        │ │  (Weekly Schedule)  │
+│  POST /api/v1/digest/run            │ │  cron: 0 9 * * 1    │
+│  GET /api/v1/digest/latest          │ └─────────────────────┘
+└─────────────────────────────────────┘           │
+          │                                       │
+          └───────────────────┬───────────────────┘
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      FastAPI (API Layer)                     │
-│  POST /api/v1/digest/run    GET /api/v1/digest/latest       │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Airflow (Orchestration)                   │
+│                    Pipeline Scripts                          │
 │  fetch_papers → rank_papers → generate_digest → notify      │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -165,15 +169,14 @@ git checkout -b feat/next-phase
 
 ```
 weekly-ai-digest/
+├── .github/
+│   └── workflows/
+│       └── weekly_digest.yml     # GitHub Actions workflow
 ├── src/
 │   ├── __init__.py
-│   ├── main.py                    # FastAPI app entrypoint
+│   ├── main.py                    # Pipeline script entrypoint
 │   ├── config.py                  # Pydantic settings
 │   ├── database.py                # SQLAlchemy session
-│   ├── routers/
-│   │   ├── __init__.py
-│   │   ├── health.py              # Health check endpoint
-│   │   └── digest.py              # Digest endpoints
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── base.py                # SQLAlchemy Base
@@ -211,9 +214,6 @@ weekly-ai-digest/
 │       ├── rank_papers.py
 │       ├── generate_digest.py
 │       └── send_notification.py
-├── airflow/
-│   └── dags/
-│       └── weekly_digest.py       # Orchestration DAG
 ├── migrations/
 │   ├── env.py
 │   └── versions/
@@ -222,8 +222,6 @@ weekly-ai-digest/
 │   ├── test_arxiv_client.py
 │   ├── test_scorer.py
 │   └── test_summarizer.py
-├── compose.yml                    # Docker Compose
-├── Dockerfile
 ├── pyproject.toml
 ├── alembic.ini
 ├── .env.example
@@ -314,12 +312,11 @@ weekly-ai-digest/
     [x] 9.4 Verify: Receive test digest
     [x] 9.5 Git: commit "feat: add email and telegram notifications"
 
-[ ] Phase 10: Docker & Airflow
-    [ ] 10.1 Create Dockerfile
-    [ ] 10.2 Create compose.yml
-    [ ] 10.3 Create airflow/dags/weekly_digest.py
-    [ ] 10.4 Verify: docker compose up works
-    [ ] 10.5 Git: commit "feat: add docker and airflow setup"
+[/] Phase 10: GitHub Actions
+    [x] 10.1 Create .github/workflows/weekly_digest.yml
+    [ ] 10.2 Add GitHub Secrets
+    [ ] 10.3 Test workflow (manual trigger)
+    [ ] 10.4 Git: commit "feat: add github actions workflow"
 
 [ ] Phase 11: FastAPI Endpoints
     [ ] 11.1 Create src/main.py
@@ -597,6 +594,43 @@ Summarize **top 20 papers only** (not all 200).
 
 After MVP is working:
 
+### RAG-Based Paper Q&A System (Priority)
+Build an interactive Q&A feature that answers questions based on the repository of pulled arXiv papers:
+
+**Architecture:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  User Question: "What are recent advances in RLHF?"         │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  1. Embedding Search (Vector DB)                            │
+│     - Convert question to embedding                         │
+│     - Find top-k similar paper abstracts                   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  2. LLM Answer Generation (RAG)                             │
+│     - Context: Retrieved paper abstracts                    │
+│     - Generate answer with citations                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Implementation Steps:**
+1. **Vector Database**: Add PostgreSQL pgvector extension or use Qdrant
+2. **Embedding Pipeline**: Generate embeddings for all paper abstracts
+3. **Search API**: `POST /api/v1/qa/ask` endpoint
+4. **Frontend**: React chat interface with paper citations
+
+**Tech Stack:**
+- Embeddings: OpenAI `text-embedding-3-small` or local `sentence-transformers`
+- Vector DB: pgvector (PostgreSQL extension) or Qdrant
+- LLM: GPT-4o-mini for answer synthesis
+
+---
+
 ### Citation-Based Prediction Scoring
 Train ML model to predict impact:
 1. Collect citation counts 6-12 months after publication
@@ -605,10 +639,10 @@ Train ML model to predict impact:
 4. Integrate as additional scoring signal
 
 ### Other Ideas
-- OpenSearch for paper search/Q&A
 - "Last Week in AI" mention detection
 - Weekly trend analysis
-- Web UI digest viewer
+- Web UI digest viewer with filtering
+- Paper recommendation based on reading history
 
 ---
 
