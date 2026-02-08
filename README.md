@@ -111,6 +111,45 @@ uv run python -m src.scripts.generate_digest
 uv run python -m src.scripts.send_notification
 ```
 
+## 📋 Quick Reference (New Machine Setup)
+
+If you're starting fresh on a new machine, here's the complete process:
+
+```bash
+# 1. Clone and enter project
+git clone https://github.com/jeffersonqiu/ai-weekly-digest.git
+cd ai-weekly-digest
+
+# 2. Install UV (package manager)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 3. Install dependencies
+uv sync
+
+# 4. Set up environment
+cp .env.example .env
+# Edit .env with your credentials (DATABASE_URL, OPENAI_API_KEY, SMTP_*, EMAIL_TO)
+
+# 5. Ensure PostgreSQL is running, then run migrations
+uv run alembic upgrade head
+
+# 6. Run the full pipeline
+uv run python -m src.main
+
+# Or run steps individually:
+uv run python -m src.scripts.fetch_papers      # Fetch from arXiv
+uv run python -m src.scripts.rank_papers       # Score with LLM
+uv run python -m src.scripts.generate_digest   # Create markdown digest
+uv run python -m src.scripts.send_notification --email  # Send email
+```
+
+### Just Want to Re-send the Last Digest?
+
+```bash
+# Send email with existing digest (no need to re-fetch/rank)
+uv run python -m src.scripts.send_notification --email
+```
+
 ## ⚙️ GitHub Actions (Automated Weekly Runs)
 
 The project includes a GitHub Actions workflow that runs automatically every Monday.
