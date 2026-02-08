@@ -664,6 +664,98 @@ Papers are unique by `arxiv_id`. On insert:
 
 ---
 
+## Phase 7: Scoring & Ranking (Detailed)
+
+### Scoring Formula
+
+```python
+final_score = (
+    0.10 * author_score +        # Priority author bonus (0 or 1)
+    0.40 * category_score +      # Priority categories (0.1-1.0)
+    0.50 * llm_interest_score    # LLM-assessed novelty (0-1)
+)
+```
+
+### Scoring Components
+
+| Signal | Weight | Range | Logic |
+|--------|--------|-------|-------|
+| **Author Score** | 10% | 0 or 1 | 1.0 if any author matches priority list |
+| **Category Score** | 40% | 0.1-1.0 | 1.0=primary match, 0.5=secondary, 0.1=other |
+| **LLM Interest** | 50% | 0-1 | GPT-4o-mini rates novelty/impact |
+
+### Author Scoring
+```python
+# Partial match (case-insensitive)
+# "Geoffrey Hinton" matches "hinton" in priority list
+priority_authors = ["hinton", "lecun", "bengio", "sutskever"]
+
+for author in paper.authors:
+    if any(p in author.lower() for p in priority_authors):
+        return 1.0
+return 0.0
+```
+
+### Category Scoring
+```python
+# Primary category = first in list
+paper_categories = ["cs.LG", "cs.AI", "stat.ML"]
+
+if paper_categories[0] in target_list:  # Primary match
+    return 1.0
+elif any(cat in target_list for cat in paper_categories[1:]):  # Secondary
+    return 0.5
+else:
+    return 0.1
+```
+
+### LLM Interest Prompt
+
+> **Note**: The LLM assesses **claimed novelty** from the abstract. It cannot verify actual novelty—that's what peer review is for.
+
+```python
+INTEREST_SCORE_PROMPT = """
+Rate this paper's CLAIMED novelty/impact (1-10) based on its abstract.
+
+Title: {title}
+Abstract: {abstract}
+Categories: {categories}
+
+Scoring Guide:
+- 1-3: Incremental improvement, minor extension of existing work
+- 4-6: Solid contribution with clear novelty
+- 7-8: Significant advance, new approach or strong results
+- 9-10: Potential breakthrough, paradigm shift
+
+Output JSON only: {"score": <int>, "reasoning": "<1 sentence>"}
+"""
+```
+
+---
+
+## Phase 8: Digest Generation (Detailed)
+
+### Scope
+Summarize **top 20 papers only** (not all 200).
+
+### Two-Stage Process
+
+1. **Per-paper summary** (top 20):
+   - Contribution: What's new?
+   - Significance: Why it matters?
+   - Limitation: Any caveats?
+
+2. **Compile digest**:
+   - Top 5 Breakthroughs
+   - Worth Skimming (6-15)
+   - Trends of the Week
+
+### Output Formats
+- **Markdown**: For Telegram + plain text
+- **HTML**: For email
+
+---
+
 ## Phase 9: Notifications (Detailed)
 
 ### Goal
@@ -779,98 +871,6 @@ The PostgreSQL service in GitHub Actions is temporary:
 - Created fresh each run
 - Papers fetched → scored → digest sent → DB destroyed
 - No persistence between runs (by design for this use case)
-
----
-
-## Phase 7: Scoring & Ranking (Detailed)
-
-### Scoring Formula
-
-```python
-final_score = (
-    0.10 * author_score +        # Priority author bonus (0 or 1)
-    0.40 * category_score +      # Priority categories (0.1-1.0)
-    0.50 * llm_interest_score    # LLM-assessed novelty (0-1)
-)
-```
-
-### Scoring Components
-
-| Signal | Weight | Range | Logic |
-|--------|--------|-------|-------|
-| **Author Score** | 10% | 0 or 1 | 1.0 if any author matches priority list |
-| **Category Score** | 40% | 0.1-1.0 | 1.0=primary match, 0.5=secondary, 0.1=other |
-| **LLM Interest** | 50% | 0-1 | GPT-4o-mini rates novelty/impact |
-
-### Author Scoring
-```python
-# Partial match (case-insensitive)
-# "Geoffrey Hinton" matches "hinton" in priority list
-priority_authors = ["hinton", "lecun", "bengio", "sutskever"]
-
-for author in paper.authors:
-    if any(p in author.lower() for p in priority_authors):
-        return 1.0
-return 0.0
-```
-
-### Category Scoring
-```python
-# Primary category = first in list
-paper_categories = ["cs.LG", "cs.AI", "stat.ML"]
-
-if paper_categories[0] in target_list:  # Primary match
-    return 1.0
-elif any(cat in target_list for cat in paper_categories[1:]):  # Secondary
-    return 0.5
-else:
-    return 0.1
-```
-
-### LLM Interest Prompt
-
-> **Note**: The LLM assesses **claimed novelty** from the abstract. It cannot verify actual novelty—that's what peer review is for.
-
-```python
-INTEREST_SCORE_PROMPT = """
-Rate this paper's CLAIMED novelty/impact (1-10) based on its abstract.
-
-Title: {title}
-Abstract: {abstract}
-Categories: {categories}
-
-Scoring Guide:
-- 1-3: Incremental improvement, minor extension of existing work
-- 4-6: Solid contribution with clear novelty
-- 7-8: Significant advance, new approach or strong results
-- 9-10: Potential breakthrough, paradigm shift
-
-Output JSON only: {"score": <int>, "reasoning": "<1 sentence>"}
-"""
-```
-
----
-
-## Phase 8: Digest Generation (Detailed)
-
-### Scope
-Summarize **top 20 papers only** (not all 200).
-
-### Two-Stage Process
-
-1. **Per-paper summary** (top 20):
-   - Contribution: What's new?
-   - Significance: Why it matters?
-   - Limitation: Any caveats?
-
-2. **Compile digest**:
-   - Top 5 Breakthroughs
-   - Worth Skimming (6-15)
-   - Trends of the Week
-
-### Output Formats
-- **Markdown**: For Telegram + plain text
-- **HTML**: For email
 
 ---
 
