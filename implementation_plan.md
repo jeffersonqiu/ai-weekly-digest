@@ -312,18 +312,19 @@ weekly-ai-digest/
     [x] 9.4 Verify: Receive test digest
     [x] 9.5 Git: commit "feat: add email and telegram notifications"
 
-[/] Phase 10: GitHub Actions
+[x] Phase 10: GitHub Actions
     [x] 10.1 Create .github/workflows/weekly_digest.yml
-    [ ] 10.2 Add GitHub Secrets
-    [ ] 10.3 Test workflow (manual trigger)
-    [ ] 10.4 Git: commit "feat: add github actions workflow"
+    [x] 10.2 Add GitHub Secrets
+    [x] 10.3 Test workflow (manual trigger)
+    [x] 10.4 Git: commit "feat: add github actions workflow"
 
-[ ] Phase 11: FastAPI Endpoints
-    [ ] 11.1 Create src/main.py
+[ ] Phase 11: FastAPI Endpoints (Optional - for future web UI)
+    [ ] 11.1 Create src/api.py
     [ ] 11.2 Create src/routers/health.py
     [ ] 11.3 Create src/routers/digest.py
     [ ] 11.4 Verify: API endpoints work
     [ ] 11.5 Git: commit "feat: add fastapi endpoints"
+    Note: Currently using CLI scripts. FastAPI only needed if building web interface.
 ```
 
 ---
@@ -521,6 +522,263 @@ Define SQLAlchemy 2.0 models for all entities.
                       │ rank        │
                       └─────────────┘
 ```
+
+---
+
+## Phase 4: Migrations (Detailed)
+
+### Goal
+Set up Alembic for database schema versioning.
+
+### Why Alembic?
+- **Version Control**: Track schema changes like code changes
+- **Rollback**: Can undo migrations if needed
+- **Team-Friendly**: Easy to share schema updates
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `alembic.ini` | Alembic configuration (DB URL, migration path) |
+| `migrations/env.py` | Connects Alembic to SQLAlchemy models |
+| `migrations/versions/*.py` | Individual migration scripts |
+
+### Commands
+
+```bash
+# Initialize Alembic (one-time)
+uv run alembic init migrations
+
+# Generate migration from model changes
+uv run alembic revision --autogenerate -m "description"
+
+# Apply all migrations
+uv run alembic upgrade head
+
+# Rollback one migration
+uv run alembic downgrade -1
+
+# Check current version
+uv run alembic current
+```
+
+### Configuration in alembic.ini
+```ini
+sqlalchemy.url = postgresql://user:pass@localhost:5432/weekly_digest
+```
+
+Or use environment variable via env.py:
+```python
+config.set_main_option("sqlalchemy.url", os.environ.get("DATABASE_URL"))
+```
+
+---
+
+## Phase 5: arXiv Client (Detailed)
+
+### Goal
+Build HTTP client to fetch papers from arXiv API.
+
+### arXiv API Overview
+
+| Aspect | Details |
+|--------|---------|
+| Base URL | `https://export.arxiv.org/api/query` |
+| Format | Atom 1.0 (XML) |
+| Rate Limit | 1 request per 3 seconds |
+| Max per Request | 2000 papers |
+
+### Query Structure
+
+```
+search_query=(cat:cs.AI OR cat:cs.LG) AND submittedDate:[20240101 TO 20240108]
+sortBy=submittedDate
+sortOrder=descending
+start=0
+max_results=100
+```
+
+### Key Components
+
+| File | Purpose |
+|------|---------|
+| `src/services/arxiv/client.py` | HTTP client with rate limiting |
+| `src/services/arxiv/parser.py` | Parse Atom XML to Pydantic models |
+| `src/schemas/paper.py` | Paper data schemas |
+
+### Rate Limiting Strategy
+```python
+def _wait_for_rate_limit(self):
+    elapsed = time.time() - self._last_request_time
+    if elapsed < 3.0:
+        time.sleep(3.0 - elapsed)
+```
+
+### Pagination
+Fetch in batches of 100, continue until:
+- Max papers reached, OR
+- No more papers returned
+
+---
+
+## Phase 6: Paper Storage (Detailed)
+
+### Goal
+Store fetched papers in the database.
+
+### Repository Pattern
+
+```python
+# src/repositories/paper_repo.py
+
+class PaperRepository:
+    def save_papers(self, run_id: int, papers: list[ArxivPaper]) -> int:
+        """Save papers, skip duplicates by arxiv_id."""
+        
+    def get_papers_for_run(self, run_id: int) -> list[Paper]:
+        """Get all papers for a run."""
+        
+    def get_unscored_papers(self, run_id: int) -> list[Paper]:
+        """Get papers without scores."""
+```
+
+### Fetch Script Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  src/scripts/fetch_papers.py                                │
+├─────────────────────────────────────────────────────────────┤
+│  1. Create new Run record (status=running)                  │
+│  2. Fetch papers from arXiv client                          │
+│  3. Save papers via repository (deduplicate)                │
+│  4. Update Run with paper count                             │
+│  5. Set Run status = completed                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Deduplication
+Papers are unique by `arxiv_id`. On insert:
+- Check if paper exists
+- If exists: skip
+- If new: insert
+
+---
+
+## Phase 9: Notifications (Detailed)
+
+### Goal
+Send digest via email and Telegram.
+
+### Email Service (`src/services/notify/email.py`)
+
+| Component | Technology |
+|-----------|------------|
+| SMTP Client | `aiosmtplib` (async) |
+| Markdown→HTML | `markdown` library |
+| Attachments | `MIMEImage` for chart |
+
+### Email Flow
+```
+1. Fetch latest digest from DB
+2. Convert markdown → HTML with styling
+3. Attach category chart image
+4. Send via SMTP (Gmail)
+```
+
+### Gmail App Password
+- Don't use regular password!
+- Go to: Google Account → Security → 2FA → App Passwords
+- Generate 16-char app password for "Mail"
+
+### Telegram Service (`src/services/notify/telegram.py`)
+
+```python
+bot = telegram.Bot(token=settings.telegram_bot_token)
+await bot.send_message(chat_id=settings.telegram_chat_id, text=digest)
+```
+
+### Getting Telegram Credentials
+1. Message @BotFather → /newbot
+2. Get bot token
+3. Add bot to your chat
+4. Get chat_id from: `https://api.telegram.org/bot<TOKEN>/getUpdates`
+
+### Multi-Recipient Email
+```python
+# In .env
+EMAIL_TO=user1@gmail.com,user2@gmail.com
+
+# Parsed as list
+recipients = [email.strip() for email in email_to.split(",")]
+```
+
+---
+
+## Phase 10: GitHub Actions (Detailed)
+
+### Goal
+Automate weekly digest generation.
+
+### Why GitHub Actions?
+| Feature | Benefit |
+|---------|---------|
+| Free | 2000 min/month (private), unlimited (public) |
+| No Server | GitHub hosts the runners |
+| Secrets | Built-in secure secrets management |
+| Cron | Built-in scheduling |
+
+### Workflow File (`.github/workflows/weekly_digest.yml`)
+
+```yaml
+name: Weekly AI Digest
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"  # Every Monday 9am UTC
+  workflow_dispatch:       # Manual trigger
+    inputs:
+      days_lookback:
+        default: "7"
+
+jobs:
+  generate-digest:
+    runs-on: ubuntu-latest
+    services:
+      postgres: ...       # Ephemeral DB for the run
+    steps:
+      - Checkout code
+      - Setup Python
+      - Install UV
+      - Install dependencies
+      - Run migrations
+      - Fetch papers
+      - Score papers
+      - Generate digest
+      - Send notifications
+      - Upload artifacts
+```
+
+### Adding GitHub Secrets
+1. Go to: Repository → Settings → Secrets → Actions
+2. Add each secret:
+   - `OPENAI_API_KEY`
+   - `SMTP_USER`
+   - `SMTP_PASS`
+   - `EMAIL_TO`
+   - `TELEGRAM_BOT_TOKEN` (optional)
+   - `TELEGRAM_CHAT_ID` (optional)
+
+### Manual Trigger
+1. Actions tab → Weekly AI Digest
+2. Click "Run workflow"
+3. Optionally change `days_lookback`
+4. Click green button
+
+### Ephemeral Database Note
+The PostgreSQL service in GitHub Actions is temporary:
+- Created fresh each run
+- Papers fetched → scored → digest sent → DB destroyed
+- No persistence between runs (by design for this use case)
 
 ---
 
