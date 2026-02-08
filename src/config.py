@@ -41,7 +41,7 @@ class Settings(BaseSettings):
 
     # arXiv
     arxiv_categories: str = "cs.AI,cs.LG,cs.CL,cs.CV"
-    arxiv_max_papers: int = 200
+    arxiv_max_papers: int = 10000  # Effectively unlimited - fetch all available papers
     arxiv_days_lookback: int = 7
     priority_authors: str = "Turing,Hinton,LeCun,Bengio,Sutskever"
 
