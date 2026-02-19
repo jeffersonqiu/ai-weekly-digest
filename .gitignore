@@ -63,7 +63,12 @@ logs/
 *.db
 *.sqlite3
 
-# Airflow
-airflow/logs/
-airflow/*.db
-airflow/*.cfg
+
+eda/data/
+
+# LLM Cache
+llm_score_cache/
+
+# Embedding cache & data splits (large binary files)
+emb_cache/
+splits/

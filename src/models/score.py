@@ -1,22 +1,22 @@
-"""PaperScore model - stores scoring signals for each paper.
+"""PaperScore model — stores two-stage ML pipeline scores for each paper.
 
-The multi-signal scoring approach:
-- recency_score: Newer papers score higher (0-1)
-- category_score: Priority categories rank higher (0-1)
-- llm_interest_score: LLM-assessed claimed novelty (0-1)
-- final_score: Weighted combination of all signals
+Two-stage scoring approach:
+- stage1_prob: XGBoost recall probability (P(interesting) from offline features)
+- stage2_prob: XGBoost precision probability (P(interesting) from offline + LLM features)
+- final_score: stage2_prob for recalled papers, 0 otherwise
+- LLM citation sub-scores: 7 scores + 7 flags + 1 tier from gpt-4.1-nano
 """
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, Text, func
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import Base
 
 
 class PaperScore(Base):
-    """Scoring signals and final rank for a paper."""
+    """Two-stage ML pipeline scores and final rank for a paper."""
 
     __tablename__ = "paper_scores"
 
@@ -26,13 +26,24 @@ class PaperScore(Base):
     )
     run_id: Mapped[int] = mapped_column(Integer, ForeignKey("runs.id"), index=True)
 
-    # Individual scoring signals (all 0-1 normalized)
-    author_score: Mapped[float] = mapped_column(Float, default=0.0)
-    category_score: Mapped[float] = mapped_column(Float, default=0.0)
-    llm_interest_score: Mapped[float] = mapped_column(Float, default=0.0)
-    llm_reasoning: Mapped[str | None] = mapped_column(
-        Text, nullable=True
-    )  # LLM's explanation
+    # ── Stage 1: Recall engine ──
+    stage1_prob: Mapped[float] = mapped_column(Float, default=0.0)
+    recalled: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # ── Stage 2: Precision engine (only for recalled papers) ──
+    stage2_prob: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # LLM citation sub-scores (7 scores, 0-10)
+    citation_potential: Mapped[float | None] = mapped_column(Float, nullable=True)
+    methodological_novelty: Mapped[float | None] = mapped_column(Float, nullable=True)
+    practical_utility: Mapped[float | None] = mapped_column(Float, nullable=True)
+    topic_trendiness: Mapped[float | None] = mapped_column(Float, nullable=True)
+    reusability: Mapped[float | None] = mapped_column(Float, nullable=True)
+    community_breadth: Mapped[float | None] = mapped_column(Float, nullable=True)
+    writing_accessibility: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # LLM citation tier
+    citation_tier: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     # Combined score and rank
     final_score: Mapped[float] = mapped_column(Float, default=0.0, index=True)
@@ -47,4 +58,5 @@ class PaperScore(Base):
     run: Mapped["Run"] = relationship("Run", back_populates="scores")  # noqa: F821
 
     def __repr__(self) -> str:
-        return f"<PaperScore paper={self.paper_id} score={self.final_score:.3f} rank={self.rank}>"
+        status = "recalled" if self.recalled else "filtered"
+        return f"<PaperScore paper={self.paper_id} score={self.final_score:.3f} rank={self.rank} ({status})>"
