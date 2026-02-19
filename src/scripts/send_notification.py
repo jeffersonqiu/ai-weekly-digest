@@ -96,8 +96,14 @@ def send_via_telegram(markdown_content: str, chart_path: str | None) -> bool:
     return send_digest_telegram(markdown_content, chart_path)
 
 
-def main():
-    """Main entry point for sending notifications."""
+def main(argv: list[str] | None = None):
+    """Main entry point for sending notifications.
+
+    Args:
+        argv: Optional argument list. When None and called from another module,
+              defaults to [] (send via all channels). When called as __main__,
+              uses sys.argv automatically.
+    """
     parser = argparse.ArgumentParser(
         description="Send the latest digest via email and/or Telegram"
     )
@@ -111,7 +117,7 @@ def main():
         action="store_true",
         help="Send via Telegram only",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv if argv is not None else [])
     
     # If no specific channel specified, try both
     send_email = args.email or (not args.email and not args.telegram)
@@ -167,4 +173,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(None)
