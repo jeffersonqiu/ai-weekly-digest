@@ -11,18 +11,19 @@ An automated system that curates, ranks, and delivers the most impactful AI rese
 │                                                              │
 │  1. 📥 FETCH      Pull latest AI papers from arXiv          │
 │         ↓                                                    │
-│  2. 🏆 RANK       Score papers using LLM + heuristics       │
-│         ↓                                                    │
+│  2. 🏆 RANK       Stage 1: XGBoost (Metadata)               │
+│                   Stage 2: LLM Precision Engine             │
+│         ↓                                                   │
 │  3. 📝 SUMMARIZE  Generate markdown digest with summaries   │
-│         ↓                                                    │
+│         ↓                                                   │
 │  4. 📧 DELIVER    Send via Email and/or Telegram            │
-│                                                              │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ## ✨ Features
 
-- **Smart Ranking**: Uses GPT-4o-mini to evaluate papers on novelty, impact, and technical depth
+- **Two-Stage Ranking**: Efficiently filters papers using offline XGBoost features (Stage 1), then evaluates the top candidates with GPT-4o-mini (Stage 2) for precision.
 - **Category Coverage**: Tracks AI, Machine Learning, NLP, and Computer Vision papers
 - **Priority Authors**: Highlights papers from notable researchers
 - **Beautiful Digests**: Markdown-formatted with category charts
