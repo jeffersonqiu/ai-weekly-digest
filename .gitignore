@@ -72,3 +72,6 @@ llm_score_cache/
 # Embedding cache & data splits (large binary files)
 emb_cache/
 splits/
+src/services/ranking/llm_cache/
+output/
+
