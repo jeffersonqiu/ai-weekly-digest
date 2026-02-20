@@ -4,7 +4,7 @@
 #
 # This workflow runs the weekly digest pipeline automatically.
 #
-# Schedule: Every Friday at 2:00 AM UTC (9:00 AM ICT)
+# Schedule: Every Friday at 23:59 GMT+8 (15:59 UTC)
 # Also supports: Manual trigger via GitHub UI
 #
 # Required GitHub Secrets:
@@ -20,9 +20,9 @@
 name: Weekly AI Digest
 
 on:
-  # Run every Friday at 2:00 AM UTC (9:00 AM ICT)
+  # Run every Friday at 23:59 GMT+8 (15:59 UTC)
   schedule:
-    - cron: "0 2 * * 5"
+    - cron: "59 15 * * 5"
   
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
