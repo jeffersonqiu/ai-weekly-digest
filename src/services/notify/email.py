@@ -66,7 +66,10 @@ class EmailSender:
             msg = MIMEMultipart("related")
             msg["Subject"] = subject
             msg["From"] = self.user
-            msg["To"] = ", ".join(self.recipients)  # Comma-separated for header
+            
+            # Send to generic Undisclosed Recipients, and BCC everyone
+            msg["To"] = "Undisclosed Recipients <noreply@ai-weekly-digest>"
+            msg["Bcc"] = ", ".join(self.recipients)
 
             # Convert markdown to HTML with proper styling
             html_body = self._markdown_to_html(markdown_content, chart_path)
