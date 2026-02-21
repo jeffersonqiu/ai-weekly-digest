@@ -71,6 +71,9 @@ def papers_to_dataframe(papers: list[Paper]) -> pd.DataFrame:
             "primary_category": primary_cat,
             "all_categories": all_cats,
             "published_at": p.published_at,
+            "title_len": len(p.title or ""),
+            "abstract_len": len(p.abstract or ""),
+            "num_authors": len(authors_pipe.split("|")) if authors_pipe else 0,
         })
 
     return pd.DataFrame(rows)
