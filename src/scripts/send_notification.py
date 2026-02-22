@@ -124,6 +124,8 @@ def main(argv: list[str] | None = None):
     send_telegram = args.telegram or (not args.email and not args.telegram)
     
     # Fetch latest digest
+    from src.config import get_settings
+    logger.info(f"Running notification service in {get_settings().app_env.upper()} mode...")
     logger.info("Fetching latest digest from database...")
     markdown_content, run, chart_path = get_latest_digest()
     

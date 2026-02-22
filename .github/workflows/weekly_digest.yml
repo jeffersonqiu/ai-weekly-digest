@@ -27,6 +27,14 @@ on:
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
     inputs:
+      environment:
+        description: "Environment to run in (test or prod)"
+        required: true
+        type: choice
+        options:
+        - test
+        - prod
+        default: "test"
       days_lookback:
         description: "Number of days to look back for papers"
         required: false
@@ -110,14 +118,17 @@ jobs:
 
       - name: Send notifications
         env:
+          APP_ENV: ${{ github.event_name == 'schedule' && 'prod' || github.event.inputs.environment }}
           DATABASE_URL: postgresql://digest:digest_secret@localhost:5432/weekly_digest
           SMTP_HOST: smtp.gmail.com
           SMTP_PORT: 587
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_TO_TEST: ${{ secrets.EMAIL_TO_TEST }}
+          EMAIL_TO_PROD: ${{ secrets.EMAIL_TO_PROD }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_TEST: ${{ secrets.TELEGRAM_CHAT_ID_TEST }}
+          TELEGRAM_CHAT_ID_PROD: ${{ secrets.TELEGRAM_CHAT_ID_PROD }}
         run: uv run python -m src.scripts.send_notification
 
       # =======================================================================

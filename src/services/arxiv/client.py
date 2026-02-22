@@ -147,7 +147,7 @@ class ArxivClient:
         }
 
         headers = {
-            "User-Agent": "Weekly-AI-Digest/1.0 (mailto:jeffersonqiu@gmail.com)"
+            "User-Agent": "Weekly-AI-Digest/2.0 (mailto:jeffersonqiu1@gmail.com)"
         }
 
         for attempt in range(max_retries):

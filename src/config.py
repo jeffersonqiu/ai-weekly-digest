@@ -17,6 +17,9 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # Environment mode: "test" or "prod"
+    app_env: str = "test"
+
     # Database
     postgres_user: str = "digest"
     postgres_password: str = "digest_secret"
@@ -60,18 +63,26 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str | None = None
     smtp_pass: str | None = None
-    email_to: str | None = None  # Comma-separated list of recipients
+    email_to_test: str | None = None
+    email_to_prod: str | None = None
 
     @property
     def email_to_list(self) -> list[str]:
-        """Parse comma-separated email addresses into a list."""
-        if not self.email_to:
+        """Parse comma-separated email addresses into a list based on environment."""
+        target = self.email_to_prod if self.app_env == "prod" else self.email_to_test
+        if not target:
             return []
-        return [email.strip() for email in self.email_to.split(",") if email.strip()]
+        return [email.strip() for email in target.split(",") if email.strip()]
 
     # Telegram
     telegram_bot_token: str | None = None
-    telegram_chat_id: str | None = None
+    telegram_chat_id_test: str | None = None
+    telegram_chat_id_prod: str | None = None
+
+    @property
+    def telegram_chat_id(self) -> str | None:
+        """Get the correct Telegram chat ID based on environment."""
+        return self.telegram_chat_id_prod if self.app_env == "prod" else self.telegram_chat_id_test
 
 
 @lru_cache
