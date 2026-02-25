@@ -6,7 +6,7 @@ An automated system that curates, ranks, and delivers the most impactful AI rese
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Every Monday at 9:00 AM UTC                                │
+│  Every Friday at 15:59 UTC (23:59 SGT)                      │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │  1. 📥 FETCH      Pull latest AI papers from arXiv          │
@@ -87,7 +87,8 @@ OPENAI_API_KEY=sk-...
 SMTP_HOST=smtp.gmail.com
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
-EMAIL_TO=recipient@example.com
+EMAIL_TO_TEST=your-email@example.com
+EMAIL_TO_PROD=sub1@example.com,sub2@example.com
 ```
 
 ### 4. Set Up Database
@@ -129,7 +130,7 @@ uv sync
 
 # 4. Set up environment
 cp .env.example .env
-# Edit .env with your credentials (DATABASE_URL, OPENAI_API_KEY, SMTP_*, EMAIL_TO)
+# Edit .env with your credentials (DATABASE_URL, OPENAI_API_KEY, SMTP_*, EMAIL_TO_TEST/PROD)
 
 # 5. Ensure PostgreSQL is running, then run migrations
 uv run alembic upgrade head
@@ -153,7 +154,7 @@ uv run python -m src.scripts.send_notification --email
 
 ## ⚙️ GitHub Actions (Automated Weekly Runs)
 
-The project includes a GitHub Actions workflow that runs automatically every Monday.
+The project includes a GitHub Actions workflow that runs automatically every Friday. It runs to the PROD list automatically, while manual runs default to the TEST list to protect subscribers.
 
 ### Setup
 
@@ -163,9 +164,11 @@ The project includes a GitHub Actions workflow that runs automatically every Mon
    - `OPENAI_API_KEY`
    - `SMTP_USER`
    - `SMTP_PASS`
-   - `EMAIL_TO` (comma-separated for multiple recipients)
+   - `EMAIL_TO_TEST` (your personal email for manual testing)
+   - `EMAIL_TO_PROD` (comma-separated for your real audience)
    - `TELEGRAM_BOT_TOKEN` (optional)
-   - `TELEGRAM_CHAT_ID` (optional)
+   - `TELEGRAM_CHAT_ID_TEST` (optional)
+   - `TELEGRAM_CHAT_ID_PROD` (optional)
 
 4. Go to **Actions → Weekly AI Digest → Run workflow** to test
 
