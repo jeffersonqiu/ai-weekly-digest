@@ -182,14 +182,12 @@ settings = get_settings()  # cached via @lru_cache
 | `ARXIV_CATEGORIES` | `"cs.AI,cs.LG,cs.CL,cs.CV"` | Comma-separated arXiv categories |
 | `ARXIV_DAYS_LOOKBACK` | `7` | Days of papers to fetch |
 | `ARXIV_MAX_PAPERS` | `10000` | Fetch cap (effectively unlimited) |
-| `PRIORITY_AUTHORS` | `"Turing,Hinton,..."` | Authors to emphasize |
 
 **Computed properties** (not set in `.env`, derived at runtime):
 - `settings.db_url` — builds URL from component fields if `DATABASE_URL` not set
 - `settings.email_to_list` — parses `EMAIL_TO_TEST` or `EMAIL_TO_PROD` based on `APP_ENV`
 - `settings.telegram_chat_id` — selects test or prod chat ID based on `APP_ENV`
 - `settings.arxiv_category_list` — splits `ARXIV_CATEGORIES` into a list
-- `settings.priority_author_list` — splits `PRIORITY_AUTHORS` into lowercase list
 
 **Setup:**
 ```bash
