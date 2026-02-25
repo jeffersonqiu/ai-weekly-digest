@@ -205,7 +205,6 @@ def generate_digest():
         # Use relative path for image in markdown if they are in same folder
         # But commonly we check where it is opened. Let's assume relative to markdown file.
         # Since markdown is in output/digests, and image is there too, just filename works.
-        
         final_digest = f"""# Weekly AI Papers Digest
 > **Date Range**: {date_range_str}
 
@@ -215,6 +214,9 @@ def generate_digest():
 ![Papers by Category]({chart_filename})
 
 {digest_content}
+
+---
+**📝 We value your feedback!** Help us improve this digest by taking our [1-minute survey](https://forms.gle/G9tC7965WtM3gDyMA).
 """
         
         # 7. Save to DB
