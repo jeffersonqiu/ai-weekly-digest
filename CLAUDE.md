@@ -199,6 +199,43 @@ cp .env.example .env
 
 ## Development Workflow
 
+### Git Workflow (REQUIRED for all code changes)
+
+Every time you make code changes, follow this exact sequence:
+
+**Step 1 — Sync with latest main before starting:**
+```bash
+git fetch origin main
+git checkout main
+git pull origin main
+```
+
+**Step 2 — Create a new branch for your changes:**
+```bash
+git checkout -b <descriptive-branch-name>
+# e.g. fix/arxiv-parser-encoding, feat/add-telegram-summary
+```
+
+**Step 3 — Make your changes, commit clearly:**
+```bash
+git add <specific files>
+git commit -m "short description of what and why"
+```
+
+**Step 4 — Push the branch:**
+```bash
+git push -u origin <branch-name>
+```
+
+**Step 5 — Remind the user to open a PR:**
+After pushing, always tell the user:
+> "Changes pushed to `<branch-name>`. Please open a Pull Request on GitHub to merge into `main`:
+> `https://github.com/jeffersonqiu/ai-weekly-digest/compare/main...<branch-name>`"
+
+> **Never commit directly to `main`.** Always use a feature branch and PR.
+
+---
+
 ### Install dependencies
 ```bash
 uv sync          # install all deps (including dev)
