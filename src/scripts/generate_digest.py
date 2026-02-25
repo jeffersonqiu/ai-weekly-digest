@@ -182,6 +182,13 @@ def generate_digest():
             summary["category_icon"] = icon
             summary["icon"] = icon # Backward compat if needed
             
+            # Format precision score as a probability percentage
+            if getattr(score, 'precision_score', None) is not None:
+                prob_pct = score.precision_score * 100
+                summary["impact_probability"] = f"{prob_pct:.1f}%"
+            else:
+                summary["impact_probability"] = "Unknown"
+            
             paper_summaries.append(summary)
             
         # 4. Generate Chart (Full Set)

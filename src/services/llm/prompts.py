@@ -65,7 +65,7 @@ Follow this structure:
 Select the most impactful papers.
 Format:
 ### [Title]({link})
-**Category**: {{category_icon}} {{category_name}}
+**Category**: {{category_icon}} {{category_name}} | **High-Impact Probability**: {{impact_probability}}
 **Takeaway**: ...
 - **Contribution**: ...
 - **Why it matters**: ...
@@ -73,7 +73,7 @@ Format:
 ## 👓 Worth Skimming (Next 5-10)
 Group by category (e.g., LLMs, Vision, etc.).
 Format:
-- **[Title]({link})**: One sentence summary of contribution and significance.
+- **[Title]({link})** ({{impact_probability}} high-impact probability): One sentence summary of contribution and significance.
 
 ## 📈 Trends of the Week
 Identify 2-3 themes or trends from the papers.
