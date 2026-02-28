@@ -24,11 +24,11 @@ class ArxivClient:
 
     BASE_URL = "https://export.arxiv.org/api/query"
 
-    def __init__(self, rate_limit_seconds: float = 3.0):
+    def __init__(self, rate_limit_seconds: float = 5.0):
         """Initialize the client.
 
         Args:
-            rate_limit_seconds: Minimum seconds between requests (arXiv asks for 3s)
+            rate_limit_seconds: Minimum seconds between requests (arXiv asks for 3s, using 5s for GitHub Actions)
         """
         self.rate_limit_seconds = rate_limit_seconds
         self._last_request_time: float = 0
@@ -93,7 +93,7 @@ class ArxivClient:
         return f"{cat_part} AND {date_part}"
 
     def _fetch_with_pagination(
-        self, query: str, max_results: int, batch_size: int = 100
+        self, query: str, max_results: int, batch_size: int = 2000
     ) -> ArxivSearchResult:
         """Fetch papers with pagination.
 
@@ -125,7 +125,7 @@ class ArxivClient:
         )
 
     def _fetch_batch(
-        self, query: str, start: int = 0, max_results: int = 100, max_retries: int = 3
+        self, query: str, start: int = 0, max_results: int = 2000, max_retries: int = 5
     ) -> ArxivSearchResult:
         """Fetch a single batch of papers with retry logic.
 
@@ -163,7 +163,7 @@ class ArxivClient:
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 429:
                     # Rate limited - wait with exponential backoff
-                    wait_time = (2 ** attempt) * 5  # 5s, 10s, 20s
+                    wait_time = (2 ** attempt) * 10  # 10s, 20s, 40s, 80s, 160s
                     print(f"Rate limited (429). Waiting {wait_time}s before retry...")
                     time.sleep(wait_time)
                     continue

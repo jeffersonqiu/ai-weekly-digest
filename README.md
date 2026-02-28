@@ -172,6 +172,17 @@ The project includes a GitHub Actions workflow that runs automatically every Fri
 
 4. Go to **Actions → Weekly AI Digest → Run workflow** to test
 
+### Handling arXiv API Rate Limits (HTTP 429)
+
+If you see `HTTP 429 Unknown Error` during the "Fetch papers" step on GitHub Actions, it is because GitHub runners use shared IP addresses that often get rate-limited by arXiv's strict anti-abuse systems. 
+
+To mitigate this, the fetching logic in `src/services/arxiv/client.py` has been specifically tuned:
+1. **Large Batch Sizes** (`batch_size=2000`): Fetches as much data as possible per request, reducing total request volume.
+2. **Longer Base Delays** (`rate_limit_seconds=5.0`): Waits 5 seconds between successful requests (arXiv only requires 3s, but 5s is safer for shared environments).
+3. **Aggressive Exponential Backoff** (`max_retries=5`): When a 429 hits, the script waits `10s`, `20s`, `40s`, `80s`, and `160s` before giving up. 
+
+*If this problem persists*, consider reducing the `arxiv_days_lookback` to `3` or `5` days to pull fewer papers, or run the fetching script locally (from your own IP) and push the populated database.
+
 ## 📁 Project Structure
 
 ```
