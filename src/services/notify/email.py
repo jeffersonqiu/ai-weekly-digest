@@ -67,7 +67,7 @@ class EmailSender:
             msg = MIMEMultipart("related")
             msg["Subject"] = subject
             msg["From"] = self.user
-            
+
             # Send to generic Undisclosed Recipients, and BCC everyone
             msg["To"] = "Undisclosed Recipients <noreply@ai-weekly-digest>"
             msg["Bcc"] = ", ".join(self.recipients)
@@ -91,7 +91,9 @@ class EmailSender:
 
             # Send email to all recipients
             recipient_count = len(self.recipients)
-            logger.info(f"Sending email to {recipient_count} recipient(s): {', '.join(self.recipients)}")
+            logger.info(
+                f"Sending email to {recipient_count} recipient(s): {', '.join(self.recipients)}"
+            )
             await aiosmtplib.send(
                 msg,
                 hostname=self.host,
@@ -123,7 +125,9 @@ class EmailSender:
             True if sent successfully, False otherwise
         """
         if not self.is_configured() or not self.admin_email:
-            logger.warning("Admin email not configured (Missing EMAIL_TO_ADMIN) or SMTP not set.")
+            logger.warning(
+                "Admin email not configured (Missing EMAIL_TO_ADMIN) or SMTP not set."
+            )
             return False
 
         try:
@@ -170,7 +174,7 @@ class EmailSender:
             # Replace markdown image syntax with CID reference
             md_content = md_content.replace(
                 f"![Papers by Category]({chart_filename})",
-                '![Papers by Category](cid:digest_chart)',
+                "![Papers by Category](cid:digest_chart)",
             )
 
         # Convert markdown to HTML
@@ -359,6 +363,7 @@ def send_digest_email(
     """
     sender = EmailSender()
     return asyncio.run(sender.send_digest(subject, markdown_content, chart_path))
+
 
 def send_admin_email_sync(
     subject: str,

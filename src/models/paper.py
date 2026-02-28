@@ -34,7 +34,10 @@ class Paper(Base):
     # Relationships
     run: Mapped["Run"] = relationship("Run", back_populates="papers")  # noqa: F821
     score: Mapped["PaperScore | None"] = relationship(  # noqa: F821
-        "PaperScore", back_populates="paper", uselist=False, cascade="all, delete-orphan"
+        "PaperScore",
+        back_populates="paper",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:

@@ -84,7 +84,11 @@ class Settings(BaseSettings):
     @property
     def telegram_chat_id(self) -> str | None:
         """Get the correct Telegram chat ID based on environment."""
-        return self.telegram_chat_id_prod if self.app_env == "prod" else self.telegram_chat_id_test
+        return (
+            self.telegram_chat_id_prod
+            if self.app_env == "prod"
+            else self.telegram_chat_id_test
+        )
 
 
 @lru_cache

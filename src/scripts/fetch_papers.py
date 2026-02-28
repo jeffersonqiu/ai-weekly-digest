@@ -24,25 +24,27 @@ from src.repositories.paper_repo import PaperRepository
 from src.services.arxiv.client import ArxivClient
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
 def main() -> None:
     """Execute the paper fetching pipeline."""
     settings = get_settings()
-    
+
     # Calculate fetch window
     end_date = date.today()
     start_date = end_date - timedelta(days=settings.arxiv_days_lookback)
-    
+
     logger.info(f"Starting paper fetch for window: {start_date} to {end_date}")
     logger.info(f"Categories: {settings.arxiv_category_list}")
 
     # Database session
     db = next(get_db())
     repo = PaperRepository(db)
-    
+
     # Create run
     run: Run | None = None
     try:
@@ -56,13 +58,13 @@ def main() -> None:
         logger.info("Fetching papers from arXiv...")
         # Note: client uses settings.arxiv_days_lookback by default, which matches start_date calculation above
         search_result = client.fetch_recent_papers()
-        
+
         logger.info(f"Found {len(search_result.papers)} papers from arXiv.")
 
         # Save to DB
         saved_count = repo.save_papers(run.id, search_result.papers)
         logger.info(f"Saved {saved_count} new papers to database.")
-        
+
         # Update run status
         repo.update_run_status(run.id, "completed", papers_count=saved_count)
         logger.info("Run completed successfully.")

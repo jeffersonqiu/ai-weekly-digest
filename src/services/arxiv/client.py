@@ -163,7 +163,7 @@ class ArxivClient:
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 429:
                     # Rate limited - wait with exponential backoff
-                    wait_time = (2 ** attempt) * 10  # 10s, 20s, 40s, 80s, 160s
+                    wait_time = (2**attempt) * 10  # 10s, 20s, 40s, 80s, 160s
                     print(f"Rate limited (429). Waiting {wait_time}s before retry...")
                     time.sleep(wait_time)
                     continue
@@ -171,7 +171,9 @@ class ArxivClient:
                 return ArxivSearchResult(papers=[], total_results=0, start_index=start)
 
             except httpx.TimeoutException:
-                print(f"Request timed out. Retrying (attempt {attempt + 1}/{max_retries})...")
+                print(
+                    f"Request timed out. Retrying (attempt {attempt + 1}/{max_retries})..."
+                )
                 continue
 
             except httpx.HTTPError as e:

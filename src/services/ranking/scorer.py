@@ -8,7 +8,6 @@ Pre-trained models are loaded from src/services/ranking/models/*.pkl
 """
 
 import logging
-import os
 import pickle
 from pathlib import Path
 
@@ -19,7 +18,6 @@ from sklearn.preprocessing import OneHotEncoder
 from src.config import get_settings
 from src.services.ranking.features import add_offline_paper_features
 from src.services.ranking.llm_scorer import (
-    CITE_FLAG_KEYS,
     CITE_SCORE_KEYS,
     score_texts_cite,
 )
@@ -101,27 +99,26 @@ class TwoStageScorer:
         )
 
         # Separate numerical and categorical
-        cat_cols = (
-            ["primary_category"]
-            if "primary_category" in feat_df.columns
-            else []
-        )
+        cat_cols = ["primary_category"] if "primary_category" in feat_df.columns else []
 
         # Numerical imputation
         num_cols_present = [c for c in self.num_cols if c in feat_df.columns]
         missing_num = set(self.num_cols) - set(num_cols_present)
         if missing_num:
-            logger.warning(f"Missing numerical features (will be imputed as 0): {missing_num}")
+            logger.warning(
+                f"Missing numerical features (will be imputed as 0): {missing_num}"
+            )
             for c in missing_num:
                 feat_df[c] = 0
 
-        X_num = self.num_imputer.transform(
-            feat_df[self.num_cols].values
-        ).astype(np.float32)
+        X_num = self.num_imputer.transform(feat_df[self.num_cols].values).astype(
+            np.float32
+        )
 
         # Categorical OHE
         if cat_cols:
             from sklearn.impute import SimpleImputer
+
             cat_imputer = SimpleImputer(strategy="most_frequent")
             X_cat_raw = cat_imputer.fit_transform(feat_df[cat_cols])
             X_cat = self.ohe.transform(X_cat_raw).astype(np.float32)
@@ -144,7 +141,9 @@ class TwoStageScorer:
 
         return X_final, feat_df
 
-    def run_stage1(self, df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, pd.DataFrame]:
+    def run_stage1(
+        self, df: pd.DataFrame
+    ) -> tuple[np.ndarray, np.ndarray, pd.DataFrame]:
         """Stage 1: Feature engineering → XGBoost recall prediction.
 
         Returns:
@@ -198,7 +197,9 @@ class TwoStageScorer:
         # LLM scoring
         api_key = self.settings.openai_api_key
         if not api_key:
-            raise ValueError("OPENAI_API_KEY not set — required for Stage 2 LLM scoring")
+            raise ValueError(
+                "OPENAI_API_KEY not set — required for Stage 2 LLM scoring"
+            )
 
         logger.info(f"Stage 2: Scoring {len(texts)} recalled papers with LLM...")
         llm_scores_df = score_texts_cite(texts, api_key)
@@ -208,9 +209,9 @@ class TwoStageScorer:
         X_llm = llm_scores_df[llm_num_cols].to_numpy(dtype=np.float32)
 
         # OHE for citation tier
-        X_tier = self.ohe_tier.transform(
-            llm_scores_df[["citation_tier"]]
-        ).astype(np.float32)
+        X_tier = self.ohe_tier.transform(llm_scores_df[["citation_tier"]]).astype(
+            np.float32
+        )
 
         # Combine: original features + LLM features + tier OHE
         X_s2 = np.hstack([X_recalled, X_llm, X_tier])
@@ -225,9 +226,7 @@ class TwoStageScorer:
 
         return probs, llm_scores_df
 
-    def rank_papers(
-        self, df: pd.DataFrame, top_k: int = 20
-    ) -> pd.DataFrame:
+    def rank_papers(self, df: pd.DataFrame, top_k: int = 20) -> pd.DataFrame:
         """Full two-stage pipeline: FE → Stage 1 → recall filter → LLM → Stage 2 → rank.
 
         Args:
@@ -282,9 +281,9 @@ class TwoStageScorer:
                 result.iloc[idx, result.columns.get_loc(k)] = llm_scores_df.iloc[i].get(
                     k, np.nan
                 )
-            result.iloc[idx, result.columns.get_loc("citation_tier")] = (
-                llm_scores_df.iloc[i].get("citation_tier", None)
-            )
+            result.iloc[
+                idx, result.columns.get_loc("citation_tier")
+            ] = llm_scores_df.iloc[i].get("citation_tier", None)
 
         # Rank by final_score descending (only recalled papers get ranks)
         recalled_result = result[result["recalled"]].sort_values(

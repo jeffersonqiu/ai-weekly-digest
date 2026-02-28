@@ -10,9 +10,7 @@ Run export_models.py from the notebook to generate them.
 """
 
 import logging
-import sys
 
-import numpy as np
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -23,7 +21,9 @@ from src.models.score import PaperScore
 from src.services.ranking.scorer import TwoStageScorer
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 # Number of top papers to include in the digest
@@ -33,9 +33,7 @@ TOP_K = 20
 def get_papers_to_rank(db: Session, limit: int | None = None) -> list[Paper]:
     """Get papers that don't have a score yet."""
     stmt = (
-        select(Paper)
-        .outerjoin(PaperScore)
-        .where(PaperScore.id == None)  # noqa: E711
+        select(Paper).outerjoin(PaperScore).where(PaperScore.id == None)  # noqa: E711
     )
     if limit:
         stmt = stmt.limit(limit)
@@ -61,27 +59,28 @@ def papers_to_dataframe(papers: list[Paper]) -> pd.DataFrame:
             a.strip() for a in (p.authors or "").split(",") if a.strip()
         )
 
-        rows.append({
-            "paper_id": p.id,
-            "run_id": p.run_id,
-            "title": p.title or "",
-            "abstract": p.abstract or "",
-            "authors": authors_pipe,
-            "categories": p.categories or "",
-            "primary_category": primary_cat,
-            "all_categories": all_cats,
-            "published_at": p.published_at,
-            "title_len": len(p.title or ""),
-            "abstract_len": len(p.abstract or ""),
-            "num_authors": len(authors_pipe.split("|")) if authors_pipe else 0,
-        })
+        rows.append(
+            {
+                "paper_id": p.id,
+                "run_id": p.run_id,
+                "title": p.title or "",
+                "abstract": p.abstract or "",
+                "authors": authors_pipe,
+                "categories": p.categories or "",
+                "primary_category": primary_cat,
+                "all_categories": all_cats,
+                "published_at": p.published_at,
+                "title_len": len(p.title or ""),
+                "abstract_len": len(p.abstract or ""),
+                "num_authors": len(authors_pipe.split("|")) if authors_pipe else 0,
+            }
+        )
 
     return pd.DataFrame(rows)
 
 
 def save_scores_to_db(db: Session, papers_df: pd.DataFrame, results_df: pd.DataFrame):
     """Save pipeline results as PaperScore entries."""
-    from src.services.ranking.llm_scorer import CITE_SCORE_KEYS
 
     count = 0
     for idx in range(len(results_df)):
@@ -93,18 +92,36 @@ def save_scores_to_db(db: Session, papers_df: pd.DataFrame, results_df: pd.DataF
             run_id=int(paper_row["run_id"]),
             stage1_prob=float(row["stage1_prob"]),
             recalled=bool(row["recalled"]),
-            stage2_prob=float(row["stage2_prob"]) if pd.notna(row["stage2_prob"]) else None,
+            stage2_prob=float(row["stage2_prob"])
+            if pd.notna(row["stage2_prob"])
+            else None,
             final_score=float(row["final_score"]),
             rank=int(row["rank"]) if pd.notna(row["rank"]) else None,
             # LLM citation sub-scores
-            citation_potential=float(row["citation_potential"]) if pd.notna(row.get("citation_potential")) else None,
-            methodological_novelty=float(row["methodological_novelty"]) if pd.notna(row.get("methodological_novelty")) else None,
-            practical_utility=float(row["practical_utility"]) if pd.notna(row.get("practical_utility")) else None,
-            topic_trendiness=float(row["topic_trendiness"]) if pd.notna(row.get("topic_trendiness")) else None,
-            reusability=float(row["reusability"]) if pd.notna(row.get("reusability")) else None,
-            community_breadth=float(row["community_breadth"]) if pd.notna(row.get("community_breadth")) else None,
-            writing_accessibility=float(row["writing_accessibility"]) if pd.notna(row.get("writing_accessibility")) else None,
-            citation_tier=str(row["citation_tier"]) if row.get("citation_tier") else None,
+            citation_potential=float(row["citation_potential"])
+            if pd.notna(row.get("citation_potential"))
+            else None,
+            methodological_novelty=float(row["methodological_novelty"])
+            if pd.notna(row.get("methodological_novelty"))
+            else None,
+            practical_utility=float(row["practical_utility"])
+            if pd.notna(row.get("practical_utility"))
+            else None,
+            topic_trendiness=float(row["topic_trendiness"])
+            if pd.notna(row.get("topic_trendiness"))
+            else None,
+            reusability=float(row["reusability"])
+            if pd.notna(row.get("reusability"))
+            else None,
+            community_breadth=float(row["community_breadth"])
+            if pd.notna(row.get("community_breadth"))
+            else None,
+            writing_accessibility=float(row["writing_accessibility"])
+            if pd.notna(row.get("writing_accessibility"))
+            else None,
+            citation_tier=str(row["citation_tier"])
+            if row.get("citation_tier")
+            else None,
         )
         db.add(score_entry)
         count += 1

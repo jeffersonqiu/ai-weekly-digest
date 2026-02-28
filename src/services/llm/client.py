@@ -23,14 +23,16 @@ class LLMClient:
     def __init__(self):
         self.settings = get_settings()
         self.provider = self.settings.llm_provider
-        
+
         if self.provider == "openai":
             self.client = OpenAI(api_key=self.settings.openai_api_key)
         else:
             # Ollama doesn't need a client instance, we'll use httpx directly
             pass
 
-    def get_completion(self, prompt: str, system_prompt: str = "You are a helpful AI assistant.") -> str:
+    def get_completion(
+        self, prompt: str, system_prompt: str = "You are a helpful AI assistant."
+    ) -> str:
         """Get completion from configured LLM provider."""
         if self.provider == "openai":
             return self._get_openai_completion(prompt, system_prompt)
@@ -65,9 +67,9 @@ class LLMClient:
                 {"role": "user", "content": prompt},
             ],
             "stream": False,
-            "format": "json", # Ollama supports JSON mode
+            "format": "json",  # Ollama supports JSON mode
         }
-        
+
         try:
             response = httpx.post(url, json=payload, timeout=60.0)
             response.raise_for_status()
@@ -76,7 +78,9 @@ class LLMClient:
             logger.error(f"Ollama API error: {e}")
             return ""
 
-    def get_structured_completion(self, prompt: str, system_prompt: str) -> dict[str, Any]:
+    def get_structured_completion(
+        self, prompt: str, system_prompt: str
+    ) -> dict[str, Any]:
         """Get JSON completion from LLM."""
         # For OpenAI, we can enforce JSON mode
         if self.provider == "openai":
@@ -95,10 +99,12 @@ class LLMClient:
             except Exception as e:
                 logger.error(f"OpenAI JSON error: {e}")
                 return {}
-        
+
         # For Ollama, we rely on the prompt + format="json" in _get_ollama_completion (if refactored)
         # But for now, let's just reuse get_completion and parse manually
-        content = self.get_completion(prompt, system_prompt + " Output valid JSON only.")
+        content = self.get_completion(
+            prompt, system_prompt + " Output valid JSON only."
+        )
         try:
             # Clean potential markdown (```json ... ```)
             if "```" in content:

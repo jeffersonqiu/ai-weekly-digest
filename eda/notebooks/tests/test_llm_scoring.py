@@ -20,6 +20,7 @@ import json
 import re
 
 from dotenv import load_dotenv
+from openai import OpenAI
 
 # Load env from multiple possible locations
 for p in [".env", "../.env", "../../.env", "../../../.env"]:
@@ -30,16 +31,30 @@ if not OPENAI_API_KEY:
     print("ERROR: OPENAI_API_KEY not found in environment")
     sys.exit(1)
 
-from openai import OpenAI
 
 MODEL_NAME = "gpt-5-nano"
 
 SCORE_KEYS = ["impact", "novelty", "technical_depth", "clarity", "adoption_likelihood"]
 FLAG_KEYS = [
-    "has_code_link", "has_dataset", "has_benchmark", "has_sota_claim",
-    "has_theory", "has_large_scale_eval", "has_math", "has_released_artifacts",
+    "has_code_link",
+    "has_dataset",
+    "has_benchmark",
+    "has_sota_claim",
+    "has_theory",
+    "has_large_scale_eval",
+    "has_math",
+    "has_released_artifacts",
 ]
-PAPER_TYPES = ["survey", "system", "dataset", "theory", "benchmark", "application", "method", "other"]
+PAPER_TYPES = [
+    "survey",
+    "system",
+    "dataset",
+    "theory",
+    "benchmark",
+    "application",
+    "method",
+    "other",
+]
 
 
 def make_prompt(text: str) -> str:
@@ -148,12 +163,12 @@ def main():
             # NOTE: no temperature param — gpt-5-nano doesn't support it
         )
         raw_text = getattr(resp, "output_text", None)
-        print(f"  ✅ API call succeeded")
+        print("  ✅ API call succeeded")
         print(f"  output_text: {raw_text!r}")
 
         if raw_text:
             parsed = parse_json_strictish(raw_text)
-            print(f"\n  Parsed JSON:")
+            print("\n  Parsed JSON:")
             print(f"  {json.dumps(parsed, indent=2)}")
             print(f"\n  Top-level keys: {list(parsed.keys())}")
 
@@ -163,7 +178,7 @@ def main():
             print(f"  Is flat (impact at top):   {is_flat}")
 
             result = normalize_value_auto(parsed)
-            print(f"\n  normalize_value_auto result:")
+            print("\n  normalize_value_auto result:")
             print(f"  {result}")
 
             all_zero = all(result.get(k, 0) == 0 for k in SCORE_KEYS)
@@ -178,12 +193,15 @@ def main():
     # --- Verify v1 cache format ---
     print("\n--- Reference: v1 cache entry ---")
     v1_path = os.path.join(
-        os.path.dirname(__file__), "..", "llm_score_cache", "train_subset_3k_gpt5nano.jsonl"
+        os.path.dirname(__file__),
+        "..",
+        "llm_score_cache",
+        "train_subset_3k_gpt5nano.jsonl",
     )
     if os.path.exists(v1_path):
         with open(v1_path) as f:
             first = json.loads(f.readline())
-        print(f"  v1 format: FLAT (keys at top level)")
+        print("  v1 format: FLAT (keys at top level)")
         print(f"  v1 sample: {first['value']}")
 
         # Verify auto-normalize works on v1 data

@@ -25,7 +25,9 @@ class ArxivPaper(BaseModel):
     title: str = Field(..., description="Paper title")
     abstract: str = Field(..., description="Paper abstract/summary")
     authors: list[str] = Field(..., description="List of author names")
-    categories: list[str] = Field(..., description="arXiv categories, e.g., ['cs.AI', 'cs.LG']")
+    categories: list[str] = Field(
+        ..., description="arXiv categories, e.g., ['cs.AI', 'cs.LG']"
+    )
     pdf_url: str = Field(..., description="Direct link to PDF")
     published_at: datetime = Field(..., description="Publication date")
 

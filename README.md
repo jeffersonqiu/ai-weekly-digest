@@ -1,5 +1,7 @@
 # 📚 Weekly AI Papers Digest
 
+[![Weekly AI Digest](https://github.com/jeffersonqiu/ai-weekly-digest/actions/workflows/weekly_digest.yml/badge.svg)](https://github.com/jeffersonqiu/ai-weekly-digest/actions/workflows/weekly_digest.yml)
+
 An automated system that curates, ranks, and delivers the most impactful AI research papers from arXiv directly to your inbox—every week.
 
 ## 🎯 What It Does
@@ -68,6 +70,10 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install project dependencies
 uv sync
+
+# Install and configure pre-commit hooks for ruff linting/formatting
+uv pip install pre-commit
+uv run pre-commit install
 ```
 
 ### 3. Configure Environment
@@ -113,6 +119,15 @@ uv run python -m src.scripts.generate_digest
 uv run python -m src.scripts.send_notification
 ```
 
+### 6. Testing
+
+The project uses `pytest` for the testing framework.
+
+```bash
+# Run the test suite
+uv run pytest
+```
+
 ## 📋 Quick Reference (New Machine Setup)
 
 If you're starting fresh on a new machine, here's the complete process:
@@ -125,8 +140,10 @@ cd ai-weekly-digest
 # 2. Install UV (package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 3. Install dependencies
+# 3. Install dependencies and set up pre-commit
 uv sync
+uv pip install pre-commit
+uv run pre-commit install
 
 # 4. Set up environment
 cp .env.example .env
@@ -228,7 +245,27 @@ This includes:
 
 ## 📝 License
 
-MIT License - feel free to use and modify!
+MIT License
+
+Copyright (c) 2026 Jefferson Qiu
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ## 🙏 Acknowledgments
 

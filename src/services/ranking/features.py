@@ -82,11 +82,7 @@ def add_offline_paper_features(
         def starts_with(prefix):
             return cats.apply(
                 lambda x: int(
-                    any(
-                        c.strip().startswith(prefix)
-                        for c in x.split("|")
-                        if c.strip()
-                    )
+                    any(c.strip().startswith(prefix) for c in x.split("|") if c.strip())
                 )
             )
 
@@ -163,9 +159,9 @@ def add_offline_paper_features(
     out["mentions_dataset"] = abs_lower.str.contains("dataset", regex=False).astype(
         "Int64"
     )
-    out["mentions_benchmark"] = abs_lower.str.contains(
-        "benchmark", regex=False
-    ).astype("Int64")
+    out["mentions_benchmark"] = abs_lower.str.contains("benchmark", regex=False).astype(
+        "Int64"
+    )
     out["mentions_arxiv_id"] = abs_lower.str.contains("arxiv", regex=False).astype(
         "Int64"
     )

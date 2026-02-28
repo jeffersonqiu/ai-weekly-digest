@@ -80,4 +80,3 @@ Identify 2-3 themes or trends from the papers.
 
 Output Markdown only. Do not include "```markdown" fence.
 """
-

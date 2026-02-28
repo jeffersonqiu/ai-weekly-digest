@@ -45,11 +45,11 @@ class PaperRepository:
             return 0
 
         new_papers_count = 0
-        
+
         # We process one by one to safely handle duplicates
         # Bulk operations would be faster but we need to check existence per paper
         # Given we fetch ~100-200 papers, this is acceptable for now.
-        
+
         # Optimization: Get all existing arxiv_ids from the input list in one query
         arxiv_ids = [p.arxiv_id for p in papers]
         stmt = select(Paper.arxiv_id).where(Paper.arxiv_id.in_(arxiv_ids))
@@ -71,13 +71,15 @@ class PaperRepository:
             )
             self.db.add(db_paper)
             new_papers_count += 1
-            
+
         self.db.commit()
         return new_papers_count
 
-    def update_run_status(self, run_id: int, status: str, papers_count: int | None = None) -> Run | None:
+    def update_run_status(
+        self, run_id: int, status: str, papers_count: int | None = None
+    ) -> Run | None:
         """Update the status and paper count of a run.
-        
+
         If status is "completed", sets completed_at to now.
         """
         run = self.db.get(Run, run_id)
@@ -87,17 +89,17 @@ class PaperRepository:
         run.status = status
         if papers_count is not None:
             run.papers_count = papers_count
-            
+
         if status == "completed":
             run.completed_at = datetime.now(timezone.utc)
         elif status == "failed":
             # Just to be explicit, though completed_at could arguably be set for failed too
             pass
-            
+
         self.db.commit()
         self.db.refresh(run)
         return run
-    
+
     def get_run(self, run_id: int) -> Run | None:
         """Get a run by ID."""
         return self.db.get(Run, run_id)

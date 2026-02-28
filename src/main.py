@@ -15,7 +15,9 @@ from src.scripts.generate_digest import generate_digest as digest_main
 from src.scripts.send_notification import main as notify_main
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
