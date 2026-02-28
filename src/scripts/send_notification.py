@@ -17,7 +17,7 @@ from sqlalchemy import select
 from src.database import get_db
 from src.models.run import Run
 from src.models.digest import Digest
-from src.services.notify.email import EmailSender, send_digest_email
+from src.services.notify.email import EmailSender, send_digest_email, send_admin_email_sync
 from src.services.notify.telegram import TelegramSender, send_digest_telegram
 
 # Configure logging
@@ -96,6 +96,34 @@ def send_via_telegram(markdown_content: str, chart_path: str | None) -> bool:
     return send_digest_telegram(markdown_content, chart_path)
 
 
+def send_admin_summary(run, settings) -> bool:
+    """Send run summary to admin."""
+    if not settings.email_to_admin:
+        return False
+        
+    start_date = run.start_date.strftime("%Y-%m-%d")
+    end_date = run.end_date.strftime("%Y-%m-%d")
+    
+    target_audience = settings.email_to_prod if settings.app_env == 'prod' else settings.email_to_test
+    
+    markdown_content = f"""# 📊 Admin Run Summary
+
+**Run ID:** `{run.id}`
+**GitHub Run ID:** `{settings.github_run_id or 'N/A'}`
+
+## Parameters
+- **Environment:** `{settings.app_env}`
+- **Email Audience:** `{target_audience}`
+- **Telegram Chat ID:** `{settings.telegram_chat_id or 'N/A'}`
+- **arXiv Days Lookback:** `{settings.arxiv_days_lookback}`
+
+## Timeframe
+- **Start Date:** `{start_date}`
+- **End Date:** `{end_date}`
+"""
+    subject = f"⚙️ AI Digest Admin Summary - Run {run.id}"
+    return send_admin_email_sync(subject, markdown_content)
+
 def main(argv: list[str] | None = None):
     """Main entry point for sending notifications.
 
@@ -125,7 +153,12 @@ def main(argv: list[str] | None = None):
     
     # Fetch latest digest
     from src.config import get_settings
-    logger.info(f"Running notification service in {get_settings().app_env.upper()} mode...")
+    settings = get_settings()
+    
+    logger.info(f"Running notification service in {settings.app_env.upper()} mode...")
+    if settings.github_run_id:
+        logger.info(f"GitHub Run ID: {settings.github_run_id}")
+        
     logger.info("Fetching latest digest from database...")
     markdown_content, run, chart_path = get_latest_digest()
     
@@ -150,6 +183,12 @@ def main(argv: list[str] | None = None):
         logger.info("📱 Attempting to send via Telegram...")
         logger.info("=" * 50)
         results["telegram"] = send_via_telegram(markdown_content, chart_path)
+        
+    if settings.email_to_admin:
+        logger.info("\n" + "=" * 50)
+        logger.info("⚙️ Attempting to send Admin Summary...")
+        logger.info("=" * 50)
+        results["admin_summary"] = send_admin_summary(run, settings)
     
     # Summary
     logger.info("\n" + "=" * 50)

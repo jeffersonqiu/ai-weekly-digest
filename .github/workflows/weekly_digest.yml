@@ -116,6 +116,14 @@ jobs:
           LLM_PROVIDER: openai
         run: uv run python -m src.scripts.generate_digest
 
+      - name: Print Run Information
+        run: |
+          echo "=================================================="
+          echo "GitHub Run ID: ${{ github.run_id }}"
+          echo "Environment: ${{ github.event_name == 'schedule' && 'prod' || github.event.inputs.environment }}"
+          echo "Days Lookback: ${{ github.event.inputs.days_lookback || '7' }}"
+          echo "=================================================="
+
       - name: Send notifications
         env:
           APP_ENV: ${{ github.event_name == 'schedule' && 'prod' || github.event.inputs.environment }}
@@ -126,9 +134,11 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           EMAIL_TO_TEST: ${{ secrets.EMAIL_TO_TEST }}
           EMAIL_TO_PROD: ${{ secrets.EMAIL_TO_PROD }}
+          EMAIL_TO_ADMIN: ${{ secrets.EMAIL_TO_ADMIN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID_TEST: ${{ secrets.TELEGRAM_CHAT_ID_TEST }}
           TELEGRAM_CHAT_ID_PROD: ${{ secrets.TELEGRAM_CHAT_ID_PROD }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
         run: uv run python -m src.scripts.send_notification
 
       # =======================================================================

@@ -19,6 +19,7 @@ class Settings(BaseSettings):
 
     # Environment mode: "test" or "prod"
     app_env: str = "test"
+    github_run_id: str | None = None
 
     # Database
     postgres_user: str = "digest"
@@ -65,6 +66,7 @@ class Settings(BaseSettings):
     smtp_pass: str | None = None
     email_to_test: str | None = None
     email_to_prod: str | None = None
+    email_to_admin: str | None = None
 
     @property
     def email_to_list(self) -> list[str]:

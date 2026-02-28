@@ -34,6 +34,7 @@ class EmailSender:
         self.user = settings.smtp_user
         self.password = settings.smtp_pass
         self.recipients = settings.email_to_list  # List of recipients
+        self.admin_email = settings.email_to_admin
 
     def is_configured(self) -> bool:
         """Check if email sending is properly configured."""
@@ -105,6 +106,50 @@ class EmailSender:
 
         except Exception as e:
             logger.error(f"Failed to send email: {e}", exc_info=True)
+            return False
+
+    async def send_admin_email(
+        self,
+        subject: str,
+        markdown_content: str,
+    ) -> bool:
+        """Send a summary email to the admin.
+
+        Args:
+            subject: Email subject line
+            markdown_content: Content in markdown format
+
+        Returns:
+            True if sent successfully, False otherwise
+        """
+        if not self.is_configured() or not self.admin_email:
+            logger.warning("Admin email not configured (Missing EMAIL_TO_ADMIN) or SMTP not set.")
+            return False
+
+        try:
+            msg = MIMEMultipart("related")
+            msg["Subject"] = subject
+            msg["From"] = self.user
+            msg["To"] = self.admin_email
+
+            html_body = self._markdown_to_html(markdown_content)
+            msg.attach(MIMEText(html_body, "html", "utf-8"))
+
+            logger.info(f"Sending admin summary to {self.admin_email}")
+            await aiosmtplib.send(
+                msg,
+                hostname=self.host,
+                port=self.port,
+                username=self.user,
+                password=self.password,
+                start_tls=True,
+                recipients=[self.admin_email],
+            )
+            logger.info("Admin email sent successfully!")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to send admin email: {e}", exc_info=True)
             return False
 
     def _markdown_to_html(
@@ -314,3 +359,11 @@ def send_digest_email(
     """
     sender = EmailSender()
     return asyncio.run(sender.send_digest(subject, markdown_content, chart_path))
+
+def send_admin_email_sync(
+    subject: str,
+    markdown_content: str,
+) -> bool:
+    """Synchronous wrapper for sending admin email."""
+    sender = EmailSender()
+    return asyncio.run(sender.send_admin_email(subject, markdown_content))
