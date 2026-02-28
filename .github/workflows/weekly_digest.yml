@@ -97,10 +97,23 @@ jobs:
       # Pipeline Steps
       # =======================================================================
       - name: Fetch papers from arXiv
+        id: fetch
         env:
           DATABASE_URL: postgresql://digest:digest_secret@localhost:5432/weekly_digest
           ARXIV_DAYS_LOOKBACK: ${{ github.event.inputs.days_lookback || '7' }}
         run: uv run python -m src.scripts.fetch_papers
+        
+      - name: Send Admin Failure Notification
+        if: failure() && steps.fetch.outcome == 'failure'
+        env:
+          APP_ENV: ${{ github.event_name == 'schedule' && 'prod' || github.event.inputs.environment }}
+          SMTP_HOST: smtp.gmail.com
+          SMTP_PORT: 587
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_TO_ADMIN: ${{ secrets.EMAIL_TO_ADMIN }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: uv run python -m src.scripts.send_failure_notification
 
       - name: Score and rank papers
         env:

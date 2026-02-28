@@ -168,7 +168,7 @@ class ArxivClient:
                     time.sleep(wait_time)
                     continue
                 print(f"Error fetching from arXiv: {e}")
-                return ArxivSearchResult(papers=[], total_results=0, start_index=start)
+                raise RuntimeError(f"arXiv API error ({e}). Halting pipeline.")
 
             except httpx.TimeoutException:
                 print(
@@ -178,10 +178,12 @@ class ArxivClient:
 
             except httpx.HTTPError as e:
                 print(f"Error fetching from arXiv: {e}")
-                return ArxivSearchResult(papers=[], total_results=0, start_index=start)
+                raise RuntimeError(f"arXiv API error ({e}). Halting pipeline.")
 
-        print("Max retries exceeded for arXiv API")
-        return ArxivSearchResult(papers=[], total_results=0, start_index=start)
+        print("Max retries exceeded for arXiv API.")
+        raise RuntimeError(
+            "arXiv rate limit (429) permanently triggered. Shutting down pipeline to avoid truncating results."
+        )
 
     def _wait_for_rate_limit(self) -> None:
         """Wait if needed to respect rate limit."""
