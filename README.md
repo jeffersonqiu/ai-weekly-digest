@@ -30,6 +30,7 @@ An automated system that curates, ranks, and delivers the most impactful AI rese
 - **Priority Authors**: Highlights papers from notable researchers
 - **Beautiful Digests**: Markdown-formatted with category charts
 - **Multi-Channel**: Email and Telegram notifications
+- **Pipeline Observability**: Automatically sends an execution summary with run parameters (Environment, Run ID, Lookback) to a designated admin email after every job.
 - **Automated**: Runs weekly via GitHub Actions (free!)
 
 ## 🛠️ Tech Stack
@@ -95,6 +96,7 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
 EMAIL_TO_TEST=your-email@example.com
 EMAIL_TO_PROD=sub1@example.com,sub2@example.com
+EMAIL_TO_ADMIN=admin@example.com
 ```
 
 ### 4. Set Up Database
@@ -183,6 +185,7 @@ The project includes a GitHub Actions workflow that runs automatically every Fri
    - `SMTP_PASS`
    - `EMAIL_TO_TEST` (your personal email for manual testing)
    - `EMAIL_TO_PROD` (comma-separated for your real audience)
+   - `EMAIL_TO_ADMIN` (optional summary reports for pipeline observability)
    - `TELEGRAM_BOT_TOKEN` (optional)
    - `TELEGRAM_CHAT_ID_TEST` (optional)
    - `TELEGRAM_CHAT_ID_PROD` (optional)
